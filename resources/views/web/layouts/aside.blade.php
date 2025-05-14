@@ -30,11 +30,21 @@
                 <!--begin:Menu item-->
                 <div class="menu-item">
                     <!--begin:Menu link-->
-                    <a class="menu-link active" href="https://preview.keenthemes.com/html/metronic/docs/base/utilities" target="_blank">
+                    <a class="menu-link {{ request()->is('/*') ? 'active' : '' }}" href="/">
                         <span class="menu-icon">
                             <i class="ki-outline ki-rocket fs-2"></i>
                         </span>
                         <span class="menu-title">Dashboard</span>
+                    </a>
+                    <!--end:Menu link-->
+                </div>
+                <div class="menu-item">
+                    <!--begin:Menu link-->
+                    <a class="menu-link {{ request()->is('parachute*') ? 'active' : '' }}" href="/parachute">
+                        <span class="menu-icon">
+                            <i class="ki-outline ki-airplane-square fs-2"></i>
+                        </span>
+                        <span class="menu-title">Parasut</span>
                     </a>
                     <!--end:Menu link-->
                 </div>
