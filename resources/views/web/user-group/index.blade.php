@@ -51,7 +51,7 @@
                     <div class="card-toolbar">
 
                         <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-                            <a href="/user-group" type="button" class="btn btn-primary">Tambah User Group</a>
+                            <a href="/user-group/create" type="button" class="btn btn-primary">Tambah User Group</a>
                         </div>
 
                         <div class="d-flex justify-content-end align-items-center d-none" data-kt-customer-table-toolbar="selected">
