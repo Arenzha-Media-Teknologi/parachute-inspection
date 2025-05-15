@@ -53,6 +53,15 @@
                     </a>
                 </div>
 
+                <div class="menu-item">
+                    <a class="menu-link {{ request()->is('user*') ? 'active' : '' }}" href="/user">
+                        <span class="menu-icon">
+                            <i class="ki-outline ki-user-square fs-2"></i>
+                        </span>
+                        <span class="menu-title">User</span>
+                    </a>
+                </div>
+
             </div>
         </div>
     </div>
