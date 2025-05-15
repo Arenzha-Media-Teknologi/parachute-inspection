@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\web\ParachuteController;
+use App\Http\Controllers\web\UserGroupController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -13,4 +14,12 @@ Route::controller(ParachuteController::class)->prefix('/parachute')->group(funct
     Route::post('/', 'store')->name('parachute.post');
     Route::patch('/{id}', 'update')->name('parachute.update');
     Route::delete('/{id}', 'destroy')->name('parachute.destroy');
+});
+
+Route::controller(UserGroupController::class)->prefix('/user-group')->group(function () {
+    Route::get('/', 'index')->name('user-group.index');
+    Route::get('/create', 'create')->name('user-group.create');
+    Route::post('/', 'store')->name('user-group.post');
+    Route::patch('/{id}', 'update')->name('user-group.update');
+    Route::delete('/{id}', 'destroy')->name('user-group.destroy');
 });
