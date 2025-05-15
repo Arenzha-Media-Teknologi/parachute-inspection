@@ -21,6 +21,7 @@
     <link href="{{ asset('assets/css/style.bundle.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
 
+
     <!--end::Global Stylesheets Bundle-->
     @yield('prehead')
     @yield('head')
@@ -55,45 +56,25 @@
             document.documentElement.setAttribute("data-bs-theme", themeMode);
         }
     </script>
-    <!--end::Theme mode setup on page load-->
-    <!--begin::Main-->
-    <!--begin::Root-->
+
     <div class="d-flex flex-column flex-root">
-        <!--begin::Page-->
         <div class="page d-flex flex-row flex-column-fluid">
-            <!--begin::Aside-->
             @include('web.layouts.aside')
-            <!--end::Aside-->
-            <!--begin::Wrapper-->
             <div class="wrapper d-flex flex-column flex-row-fluid" id="kt_wrapper">
-                <!--begin::Header-->
                 @include('web.layouts.header')
-                <!--end::Header-->
-                <!--begin::Content-->
                 @yield('content')
-                <!--end::Content-->
-                <!--begin::Footer-->
                 @include('web.layouts.footer')
-                <!--end::Footer-->
             </div>
-            <!--end::Wrapper-->
         </div>
-        <!--end::Page-->
     </div>
-    <!--end::Root-->
-    <!--end::Main-->
-    <!--begin::Scrolltop-->
     <div id="kt_scrolltop" class="scrolltop" data-kt-scrolltop="true">
         <i class="ki-outline ki-arrow-up"></i>
     </div>
-    <!--end::Scrolltop-->
-    <!--begin::Javascript-->
-    <script>
-        var hostUrl = "assets/";
-    </script>
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-    <script src="assets/plugins/global/plugins.bundle.js"></script>
-    <script src="assets/js/scripts.bundle.js"></script>
+    <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>
+    <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
+    <script src="{{ asset('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <!--end::Global Javascript Bundle-->
     @if(env('APP_ENV') == 'local')
     <script src="{{ asset('assets/js/vue.js') }}"></script>
