@@ -8,8 +8,9 @@ Route::get('/', function () {
 });
 
 Route::controller(ParachuteController::class)->prefix('/parachute')->group(function () {
-    Route::get('/', 'index')->name('outlet-book.index');
-    Route::post('/', 'store')->name('outlet-book.post');
-    Route::post('/{id}/update', 'update')->name('outlet-book.update');
-    Route::delete('/{id}', 'destroy')->name('outlet-book.destroy');
+    Route::get('/datatables', 'indexData')->name('parachute.indexData');
+    Route::get('/', 'index')->name('parachute.index');
+    Route::post('/', 'store')->name('parachute.post');
+    Route::patch('/{id}', 'update')->name('parachute.update');
+    Route::delete('/{id}', 'destroy')->name('parachute.destroy');
 });
