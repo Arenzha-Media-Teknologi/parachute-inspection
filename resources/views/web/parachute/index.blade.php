@@ -66,10 +66,10 @@
                     <table class="table table-hover table-rounded table-striped border gy-7 gs-7" id="parachute-table">
                         <thead>
                             <tr>
-                                <th class="text-center">Serial Number</th>
-                                <th class="text-center">Tipe Parasut</th>
-                                <th class="text-center">Part Number</th>
-                                <th class="text-center">Aksi</th>
+                                <th style="font-weight: bolder; text-align:left; font-size:14px;">Serial Number</th>
+                                <th style="font-weight: bolder; text-align:center; font-size:14px;">Tipe Parasut</th>
+                                <th style="font-weight: bolder; text-align:center; font-size:14px;">Part Number</th>
+                                <th style="font-weight: bolder; text-align:center; font-size:14px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -356,21 +356,21 @@
                     data: 'serial_number',
                     name: 'serial_number',
                     render: function(data, type) {
-                        return `<div class="text-center font-weight-bolder">${data}</div>`;
+                        return `<div class="text-start">${data}</div>`;
                     }
                 },
                 {
                     data: 'part_number',
                     name: 'part_number',
                     render: function(data, type, row) {
-                        return `<div class="text-center font-weight-bolder">${data}</div>`;
+                        return `<div class="text-center">${data}</div>`;
                     }
                 },
                 {
                     data: 'type',
                     name: 'type',
                     render: function(data, type, row) {
-                        return `<div  class="text-center font-weight-bolder">${data}</div>`;
+                        return `<div  class="text-center">${data}</div>`;
                     }
                 },
                 {
