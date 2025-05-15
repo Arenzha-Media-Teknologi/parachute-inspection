@@ -63,13 +63,11 @@
                     </div>
                 </div>
                 <div class="card-body pt-0">
-                    <table class="table table-hover table-rounded table-striped border gy-7 gs-7" id="parachute-table">
+                    <table class="table table-hover table-rounded table-striped border gy-7 gs-7" id="user-group-table">
                         <thead>
                             <tr>
-                                <th class="text-center">Serial Number</th>
-                                <th class="text-center">Tipe Parasut</th>
-                                <th class="text-center">Part Number</th>
-                                <th class="text-center">Aksi</th>
+                                <th style="font-weight: bolder; text-align:left; font-size:14px;">Nama Group</th>
+                                <th style="font-weight: bolder; text-align:center; font-size:14px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -129,34 +127,20 @@
 
 <script>
     $(function() {
-        var Table = $('#parachute-table').DataTable({
+        var Table = $('#user-group-table').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
-                url: '/parachute/datatables',
+                url: '/user-group/datatables',
                 data: function(d) {
                     d.number = $('.searchNumber').val()
                 }
             },
             columns: [{
-                    data: 'serial_number',
-                    name: 'serial_number',
+                    data: 'name',
+                    name: 'name',
                     render: function(data, type) {
-                        return `<div class="text-center font-weight-bolder">${data}</div>`;
-                    }
-                },
-                {
-                    data: 'part_number',
-                    name: 'part_number',
-                    render: function(data, type, row) {
-                        return `<div class="text-center font-weight-bolder">${data}</div>`;
-                    }
-                },
-                {
-                    data: 'type',
-                    name: 'type',
-                    render: function(data, type, row) {
-                        return `<div  class="text-center font-weight-bolder">${data}</div>`;
+                        return `<div class="text-start font-weight-bolder">${data}</div>`;
                     }
                 },
                 {
@@ -176,12 +160,12 @@
             Table.draw();
         });
 
-        $('#parachute-table').on('click', 'tr .btn-delete', function(e) {
+        $('#user-group-table').on('click', 'tr .btn-delete', function(e) {
             e.preventDefault();
             // alert('click');
             const id = $(this).attr('data-id');
             Swal.fire({
-                title: 'Yakin Ingin menghapus data Parasut?',
+                title: 'Yakin Ingin menghapus data User Group?',
                 // text: "The data will be deleted",
                 icon: 'warning',
                 reverseButtons: true,
@@ -192,7 +176,7 @@
                 cancelButtonText: 'Cancel',
                 showLoaderOnConfirm: true,
                 preConfirm: () => {
-                    return axios.delete('/parachute/' + id)
+                    return axios.delete('/user-group/' + id)
                         .then(function(response) {
                             console.log(response.data);
                         })
@@ -211,7 +195,7 @@
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
-                        text: 'Parasut berhasil dihapus',
+                        text: 'User Group berhasil dihapus',
                     }).then((result) => {
                         if (result.isConfirmed) {
                             // window.location.reload();
@@ -222,7 +206,7 @@
             })
         })
 
-        $(document).on('click', '.btn-edit-parasut', function(e) {
+        $(document).on('click', '.btn-edit', function(e) {
             e.preventDefault();
 
             const id = $(this).data('id');
