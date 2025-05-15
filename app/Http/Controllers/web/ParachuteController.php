@@ -61,6 +61,7 @@ class ParachuteController extends Controller
             $newParachute = new Parachute();
             $newParachute->serial_number = $request->serialNumber;
             $newParachute->type = $request->type;
+            $newParachute->category = $request->category;
             $newParachute->part_number = $request->partNumber;
             $newParachute->save();
 
@@ -106,6 +107,7 @@ class ParachuteController extends Controller
         try {
             $updateParachute = Parachute::find($id);
             $updateParachute->serial_number = $request->serialNumber;
+            $updateParachute->category = $request->category;
             $updateParachute->type = $request->type;
             $updateParachute->part_number = $request->partNumber;
             $updateParachute->save();
