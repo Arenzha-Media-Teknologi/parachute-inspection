@@ -67,6 +67,7 @@
                         <thead>
                             <tr>
                                 <th style="font-weight: bolder; text-align:left; font-size:14px;">Serial Number</th>
+                                <th style="font-weight: bolder; text-align:center; font-size:14px;">Jenis Parasut</th>
                                 <th style="font-weight: bolder; text-align:center; font-size:14px;">Tipe Parasut</th>
                                 <th style="font-weight: bolder; text-align:center; font-size:14px;">Part Number</th>
                                 <th style="font-weight: bolder; text-align:center; font-size:14px;">Aksi</th>
@@ -96,6 +97,15 @@
                                             </span>
                                         </label>
                                         <input type="text" class="form-control form-control-solid" placeholder="" v-model="serialNumber" />
+                                    </div>
+
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Jenis Parasut</label>
+                                        <select class="form-select form-select-solid" v-model="category">
+                                            <option value="">- PILIH JENIS PARASUT - </option>
+                                            <option value="PARASUT ORANG (PUO)">PARASUT ORANG (PUO)</option>
+                                            <option value="PARASUT BARANG (PUB)">PARASUT BARANG (PUB)</option>
+                                        </select>
                                     </div>
 
                                     <div class="fv-row mb-7">
@@ -141,6 +151,15 @@
                                             </span>
                                         </label>
                                         <input type="text" class="form-control form-control-solid" placeholder="" v-model="parachuteDetail.serial_number" />
+                                    </div>
+
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Jenis Parasut</label>
+                                        <select class="form-select form-select-solid" v-model="parachuteDetail.category">
+                                            <option value="">- PILIH JENIS PARASUT - </option>
+                                            <option value="PARASUT ORANG (PUO)">PARASUT ORANG (PUO)</option>
+                                            <option value="PARASUT BARANG (PUB)">PARASUT BARANG (PUB)</option>
+                                        </select>
                                     </div>
 
                                     <div class="fv-row mb-7">
@@ -208,6 +227,7 @@
         data: {
             parachute,
             serialNumber: '',
+            category: '',
             type: '',
             partNumber: '',
             parachuteDetail: [],
@@ -275,6 +295,7 @@
                 axios.post('/parachute', {
                         serialNumber: this.serialNumber,
                         type: this.type,
+                        category: this.category,
                         partNumber: this.partNumber,
                     })
                     .then(function(response) {
@@ -309,6 +330,7 @@
                 axios.patch('/parachute/' + this.parachuteDetail['id'], {
                         serialNumber: this.parachuteDetail['serial_number'],
                         type: this.parachuteDetail['type'],
+                        category: this.parachuteDetail['category'],
                         partNumber: this.parachuteDetail['part_number'],
                     })
                     .then(function(response) {
@@ -364,6 +386,13 @@
                     name: 'part_number',
                     render: function(data, type, row) {
                         return `<div class="text-center">${data}</div>`;
+                    }
+                },
+                {
+                    data: 'category',
+                    name: 'category',
+                    render: function(data, type, row) {
+                        return `<div  class="text-center">${data}</div>`;
                     }
                 },
                 {
