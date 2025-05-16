@@ -11,4 +11,9 @@ class Parachute extends Model
     use HasFactory;
     use SoftDeletes;
     protected $guarded = [];
+
+    public function inspections()
+    {
+        return $this->hasMany(ParachuteInspection::class, 'parachute_id', 'id');
+    }
 }

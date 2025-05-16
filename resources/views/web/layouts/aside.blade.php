@@ -36,11 +36,20 @@
                 </div>
 
                 <div class="menu-item">
-                    <a class="menu-link {{ request()->is('parachute*') ? 'active' : '' }}" href="/parachute">
+                    <a class="menu-link {{ request()->is('parachute') ? 'active' : '' }}" href="/parachute">
                         <span class="menu-icon">
                             <i class="ki-outline ki-airplane-square fs-2"></i>
                         </span>
                         <span class="menu-title">Parasut</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link {{ request()->is('parachute-inspection*') ? 'active' : '' }}" href="/parachute-inspection">
+                        <span class="menu-icon">
+                            <i class="ki-outline ki-shield-tick fs-2"></i>
+                        </span>
+                        <span class="menu-title">Pemeriksaan Parasut</span>
                     </a>
                 </div>
 
