@@ -30,7 +30,7 @@
                     </li>
 
 
-                    <li class="breadcrumb-item text-gray-900">Daftar Parsut</li>
+                    <li class="breadcrumb-item text-gray-900">Daftar Parasut</li>
 
                 </ul>
             </div>

@@ -1,0 +1,767 @@
+@extends('web.layouts.app')
+
+@section('title', 'Pemeriksaan Parasut')
+
+@section('prehead')
+@endsection
+
+
+@section('content')
+
+@php
+$user = auth()->user();
+$userLoginPermissions = [];
+if (request()->session()->has('userLoginPermissions')) {
+$userLoginPermissions = request()->session()->get('userLoginPermissions');
+}
+@endphp
+
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <div class="toolbar" id="kt_toolbar">
+        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
+            <div data-kt-swapper="true" data-kt-swapper-mode="prepend" data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}" class="page-title d-flex align-items-center me-3 flex-wrap lh-1">
+                <h1 class="d-flex align-items-center text-gray-900 fw-bold my-1 fs-3">Pemeriksaan Parasut</h1>
+                <span class="h-20px border-gray-200 border-start mx-4"></span>
+                <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-1">
+                    <li class="breadcrumb-item text-muted">
+                        <a href="/" class="text-muted text-hover-primary">Dashboard</a>
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <span class="bullet bg-gray-300 w-5px h-2px"></span>
+                    </li>
+
+                    <li class="breadcrumb-item text-muted">
+                        <a href="/parachute-inspection" class="text-muted text-hover-primary">Pemeriksaan Parasut</a>
+                    </li>
+
+                    <li class="breadcrumb-item">
+                        <span class="bullet bg-gray-300 w-5px h-2px"></span>
+                    </li>
+
+
+                    <li class="breadcrumb-item text-gray-900">Daftar Pemeriksaan Parasut</li>
+
+                </ul>
+            </div>
+            <div class="d-flex align-items-center py-1">
+            </div>
+        </div>
+    </div>
+    <div class="post d-flex flex-column-fluid" id="app">
+        <div id="kt_content_container" class="container-xxl">
+            <div class="card">
+                <div class="p-6 m-3">
+                    <div class="text-center" style="background-color: turquoise;">
+                        <span class="text-white pt-3 pb-3" style="font-size: 35px; font-weight: bold;">Daftar Pemeriksaan</span>
+                    </div>
+                </div>
+                <div class="p-6 m-3 col-4">
+                    <div class="text-center" style="background-color: blue;">
+                        <h1 class="pt-3 pb-3" style="color: yellow">Total Pemeriksaan :
+                            <span style="color: orange; font-size: 30px; font-weight: bold;"> @{{ parachuteInspection.length }} </span>
+                        </h1>
+                    </div>
+                </div>
+
+                <div class="card-header border-0 pt-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-4">
+                        <div class="d-flex flex-wrap align-items-center gap-3">
+                            <div class="position-relative">
+                                <i class="ki-outline ki-magnifier fs-3 position-absolute top-50 start-0 translate-middle-y ms-4"></i>
+                                <input type="text" class="form-control form-control-solid ps-13" style="width: 220px;" placeholder="Cari Data Parasut" />
+                            </div>
+
+                            <input type="date" class="form-control" v-model="date_start" style="width: 160px;" />
+                            <input type="date" class="form-control" v-model="date_end" style="width: 160px;" />
+                            <select v-model="parachuteType" class="form-select" style="width: 180px;">
+                                <option value="">-- Tipe Parasut --</option>
+                                <option v-for="item in parachute" :value="item.type">@{{ item.type }}</option>
+                            </select>
+                            <button class="btn btn-secondary" @click="applyFilter"><i class="fas fa-filter fs-4"></i>&nbsp; Filter</button>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-primary" @click="onModalOpen" data-bs-toggle="modal" data-bs-target="#kt_modal_create"> Tambah Periksa </button>
+                            <!-- <button class="btn btn-success"> Laporan </button> -->
+                            <div class="dropdown">
+                                <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"> Laporan </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="/parachute-inspection/report" target="_blank">
+                                            <i class="fas fa-calendar-day me-2 text-success"></i> Laporan Pemeriksaan
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="/parachute-inspection/report-doc" target="_blank">
+                                            <i class="fas fa-calendar-alt me-2 text-danger"></i> Lampiran Pemeriksaan
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end align-items-center d-none mt-3" data-kt-customer-table-toolbar="selected">
+                        <div class="fw-bold me-5">
+                            <span class="me-2" data-kt-customer-table-select="selected_count"></span>Selected
+                        </div>
+                        <button class="btn btn-danger" data-kt-customer-table-select="delete_selected">Delete Selected</button>
+                    </div>
+                </div>
+
+                <div class="card-body pt-0">
+                    <table class="table table-hover table-rounded table-striped border gy-7 gs-7" id="parachute-table">
+                        <thead>
+                            <tr>
+                                <th class="text-center">Tgl.Pemeriksaan</th>
+                                <th class="text-center">Kode Pemeriksaan</th>
+                                <th class="text-center">Jenis Parasut</th>
+                                <th class="text-center">Tipe Parasut</th>
+                                <th class="text-center">Part Number</th>
+                                <th class="text-center">Serial Number</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" tabindex="-1" id="kt_modal_create">
+            <div class="modal-dialog modal-dialog-centered mw-650px modal-fullscreen-sm-down">
+                <form class="form" @submit.prevent="submitForm">
+                    <div class="modal-content">
+                        <div class="modal-header" id="kt_modal_add_customer_header">
+                            <h2 class="fw-bold">Tambah Data Periksa</h2>
+                        </div>
+                        <div class="modal-body py-10 px-lg-17">
+                            <div class="scroll-y me-n7 pe-7" id="kt_modal_add_customer_scroll" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#kt_modal_add_customer_header" data-kt-scroll-wrappers="#kt_modal_add_customer_scroll" data-kt-scroll-offset="300px">
+                                <div class="fv-row mb-7">
+                                    <label class="required fs-6 fw-semibold mb-2">Kode Pemeriksaan </label>
+                                    <input type="text" class="form-control form-control" placeholder="" v-model="code" disabled />
+                                </div>
+                                <div class="fv-row mb-7">
+                                    <label class="required fs-6 fw-semibold mb-2">Tanggal Pemeriksaan </label>
+                                    <input type="date" class="form-control form-control" placeholder="" v-model="date" />
+                                </div>
+                                <div class="fv-row mb-7">
+                                    <label class="required fs-6 fw-semibold mb-2">Nama Kegiatan</label>
+                                    <input type="text" class="form-control form-control" placeholder="" v-model="activity" />
+                                </div>
+                                <div class="fv-row mb-7">
+                                    <label class="required fs-6 fw-semibold mb-2">Nama Petugas</label>
+                                    <input type="text" class="form-control form-control" placeholder="" v-model="checker" />
+                                </div>
+
+                                <div class="fv-row mb-7">
+                                    <label class="required fs-6 fw-semibold mb-2">Data Parasut</label>
+                                    <select v-model="parachuteSelect" class="form-select" @change="onParachuteChange">
+                                        <option disabled value="">-- Pilih Data Parasut --</option>
+                                        <option v-for="item in parachute" :value="item.id">@{{ item.id }} - @{{ item.serial_number }}</option>
+                                    </select>
+                                </div>
+                                <!-- Tampilkan detail setelah data parasut dipilih -->
+                                <div v-if="parachuteSelect">
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Jenis Parasut</label>
+                                        <input type="text" class="form-control form-control" placeholder="" v-model="category" disabled />
+                                    </div>
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Tipe Parasut</label>
+                                        <input type="text" class="form-control form-control" placeholder="" v-model="type" disabled />
+                                    </div>
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Part Number</label>
+                                        <input type="text" class="form-control form-control" placeholder="" v-model="partNumber" disabled />
+                                    </div>
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Serial Number </label>
+                                        <input type="text" class="form-control form-control" placeholder="" v-model="serialNumber" disabled />
+                                    </div>
+                                </div>
+
+                                <div class="fv-row mb-7">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h2 class="mb-0">Hasil Pemeriksaan</h2>
+                                        <a class="btn btn-primary btn-sm text-white" @click="addItems">
+                                            <i class="fa fa-plus"></i>
+                                        </a>
+                                    </div>
+                                    <table class="table table-sm table-bordered align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th class="border-0">Upload File (2MB)</th>
+                                                <!-- <th class="border-0"></th> -->
+                                                <th class="border-0">Keterangan</th>
+                                                <th class="text-center border-0">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody v-if="parachuteItems.length">
+                                            <tr v-for="(item,index) in parachuteItems">
+                                                <td class="border-0"> <input type="file" ref="file" accept="image/*" class="form-control form-control-sm" v-on:change="handleFileUpload($event, index)">
+                                                    <div v-if="item.previewUrl" class="mt-2">
+                                                        <img :src="item.previewUrl" alt="Preview" style="max-width: 200px; max-height: 100px;" />
+                                                    </div>
+                                                </td>
+                                                <!-- <td class="border-0">
+                                                    <div v-if="item.previewUrl" class="mt-2">
+                                                        <img :src="item.previewUrl" alt="Preview" style="max-width: 150px; max-height: 100px;" />
+                                                    </div>
+                                                </td> -->
+                                                <td class="border-0 align-top">
+                                                    <textarea v-if="item.previewUrl" v-model="item.description" class="form-control form-control-sm" rows="6" required></textarea>
+                                                    <textarea v-else v-model="item.description" class="form-control form-control-sm" rows="1" required></textarea>
+                                                </td>
+                                                <!-- <td class="border-0"> <input type="text" v-model="item.description" class="form-control form-control-sm" required></td> -->
+                                                <td class="border-0 align-top">
+                                                    <button type="button" class="btn btn-sm btn-light" @click="removeItem(index)"><i class="fas fa-fw fa-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tbody v-else>
+                                            <tr>
+                                                <td colspan="3" class="border-0 text-center text-muted">Belum ada item pemeriksaan.</td>
+                                            </tr>
+                                            <tr class="border-0" style="visibility: hidden; height: 0;">
+                                                <td class="border-0"><input type="file" class="form-control form-control-sm" style="width: 100%;"></td>
+                                                <!-- <td class="border-0"><input type="file" class="form-control form-control-sm" style="width: 100%;"></td> -->
+                                                <td class="border-0"><input type="text" class="form-control form-control-sm" style="width: 100%;"></td>
+                                                <td class="border-0"><button type="button" class="btn btn-sm btn-light"><i class="fas fa-fw fa-trash"></i></button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer flex-center">
+                            <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-success" :data-kt-indicator="loading ? 'on' : null" :disabled="loading">
+                                <span class="indicator-label">Simpan</span>
+                                <span class="indicator-progress">Please wait...
+                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal fade" tabindex="-1" id="kt_modal_edit">
+            <div class="modal-dialog modal-dialog-centered mw-650px">
+                <div class="modal-content">
+                    <form class="form" @submit.prevent="submitFormEdit">
+                        <div class="modal-header" id="kt_modal_add_customer_header">
+                            <h2 class="fw-bold">Edit Parasut</h2>
+
+                        </div>
+                        <div class="modal-body py-10 px-lg-17">
+
+                            <div class="scroll-y me-n7 pe-7" id="kt_modal_add_customer_scroll" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#kt_modal_add_customer_header" data-kt-scroll-wrappers="#kt_modal_add_customer_scroll" data-kt-scroll-offset="300px">
+                                <div class="fv-row mb-7">
+                                    <label class="required fs-6 fw-semibold mb-2">Serial Number
+                                        <span class="ms-1" data-bs-toggle="tooltip" title="Serial Number Harus unik">
+                                            <i class="ki-outline ki-information-5 text-gray-500 fs-6"></i>
+                                        </span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-solid" placeholder="" v-model="parachuteDetail.serial_number" />
+                                </div>
+
+                                <div class="fv-row mb-7">
+                                    <label class="required fs-6 fw-semibold mb-2">Tipe Parasut</label>
+                                    <input type="text" class="form-control form-control-solid" placeholder="" v-model="parachuteDetail.type" />
+                                </div>
+
+                                <div class="fv-row mb-7">
+                                    <label class="required fs-6 fw-semibold mb-2">Part Number</label>
+                                    <input type="text" class="form-control form-control-solid" placeholder="" v-model="parachuteDetail.part_number" />
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="modal-footer flex-center">
+                            <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-success" :data-kt-indicator="loading ? 'on' : null" :disabled="loading">
+                                <span class="indicator-label">Simpan</span>
+                                <span class="indicator-progress">Please wait...
+                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!--end::Container-->
+</div>
+<!--end::Post-->
+
+@endsection
+@section('script')
+<!-- <script src="{{ asset('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script> -->
+@endsection
+
+@section('pagescript')
+
+<script>
+    $(function() {
+        toastr.options = {
+            "closeButton": false,
+            "debug": false,
+            "newestOnTop": false,
+            "progressBar": false,
+            "positionClass": "toastr-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+    })
+</script>
+<script>
+    const parachuteInspection = <?php echo Illuminate\Support\Js::from($parachute_inspection) ?>;
+    const parachute = <?php echo Illuminate\Support\Js::from($parachute) ?>;
+    let app = new Vue({
+        el: '#app',
+        data: {
+            parachuteInspection,
+            parachute,
+            code: '',
+            date: '',
+            activity: '',
+            checker: '',
+
+            category: '',
+            type: '',
+            partNumber: '',
+            serialNumber: '',
+            parachuteDetail: [],
+
+            parachuteSelect: '',
+            parachuteItems: [],
+
+            date_start: '',
+            date_end: '',
+            parachuteType: '',
+            loading: false,
+        },
+        methods: {
+            applyFilter() {
+                const today = new Date().toISOString().split('T')[0];
+                if (this.date_end && !this.date_start) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Tanggal tidak lengkap',
+                        text: 'Tanggal mulai harus diisi jika tanggal akhir diisi.',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        this.date_start = today;
+                        this.date_end = today;
+                    });
+                    return;
+                }
+                const start = new Date(this.date_start);
+                const end = new Date(this.date_end);
+                if (this.date_start && this.date_end && end < start) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Tanggal tidak valid',
+                        text: 'Tanggal akhir tidak boleh lebih awal dari tanggal mulai.',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        this.date_start = today;
+                        this.date_end = today;
+                    });
+                    return;
+                }
+                $('#parachute-table').DataTable().ajax.reload();
+            },
+
+            generateCode() {
+                // const today = new Date();
+                // const dd = String(today.getDate()).padStart(2, '0');
+                // const mm = String(today.getMonth() + 1).padStart(2, '0');
+                // const yyyy = today.getFullYear();
+                // const dateStr = dd + mm + yyyy;
+                // const todayInspections = this.parachuteInspection.filter(item => {
+                //     const createdAt = new Date(item.created_at);
+                //     return (
+                //         createdAt.getDate() === today.getDate() &&
+                //         createdAt.getMonth() === today.getMonth() &&
+                //         createdAt.getFullYear() === today.getFullYear()
+                //     );
+                // });
+                // const usedNumbers = todayInspections.map(item => {
+                //     const parts = item.number.split('-');
+                //     const numPart = parts[2] ?? '000';
+                //     return parseInt(numPart, 10);
+                // });
+                // const maxUsed = usedNumbers.length ? Math.max(...usedNumbers) : 0;
+                // const nextNumber = maxUsed + 1;
+                // const paddedNumber = String(nextNumber).padStart(3, '0');
+                // this.code = `PR-${dateStr}-${paddedNumber}`;
+
+                axios.get('/parachute-inspection/generate-code')
+                    .then(response => {
+                        this.code = response.data.code;
+                    })
+                    .catch(error => {
+                        console.error('Gagal generate code:', error);
+                    });
+            },
+            onModalOpen() {
+                this.generateCode();
+                this.date = '';
+                this.activity = '';
+                this.checker = '';
+
+                this.category = '';
+                this.type = '';
+                this.partNumber = '';
+                this.serialNumber = '';
+                this.parachuteItems = [];
+            },
+
+            onParachuteChange() {
+                const selected = this.parachute.find(item => item.id === this.parachuteSelect);
+                if (selected) {
+                    this.category = selected.category;
+                    this.type = selected.type;
+                    this.partNumber = selected.part_number;
+                    this.serialNumber = selected.serial_number;
+                } else {
+                    this.category = '';
+                    this.type = '';
+                    this.partNumber = '';
+                    this.serialNumber = '';
+                }
+            },
+
+            addItems: function() {
+                this.parachuteItems.push({
+                    "file": "",
+                    "previewUrl": null,
+                    "description": "",
+                });
+            },
+            removeItem: function(index) {
+                this.parachuteItems.splice(index, 1);
+            },
+            handleFileUpload(event, index) {
+                console.log(event);
+                const file = event.target.files[0];
+                if (!file) return;
+                const maxSize = 2 * 1024 * 1024; // 2MB
+                const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (file.size > maxSize) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Ukuran File Terlalu Besar',
+                        text: 'Ukuran file maksimal 2MB.',
+                    });
+                    event.target.value = null;
+                    return;
+                }
+                if (!allowedImageTypes.includes(file.type)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Tipe File Tidak Valid',
+                        text: 'Hanya file gambar (JPG, PNG, GIF, WEBP) yang diperbolehkan.',
+                    });
+                    event.target.value = null;
+                    return;
+                }
+                this.parachuteItems[index].file = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.parachuteItems[index].previewUrl = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
+
+            submitForm: function() {
+                if (this.date == '') {
+                    Swal.fire(
+                        'Terjadi Kesalahan!',
+                        'Tanggal Pemeriksaan tidak boleh kosong.',
+                        'warning'
+                    );
+                } else if (this.activity == '') {
+                    Swal.fire(
+                        'Terjadi Kesalahan!',
+                        'Nama Kegiatan tidak boleh kosong.',
+                        'warning'
+                    )
+                } else if (this.checker == '') {
+                    Swal.fire(
+                        'Terjadi Kesalahan!',
+                        'Nama Petugas tidak boleh kosong.',
+                        'warning'
+                    )
+                } else if (this.parachuteSelect == '') {
+                    Swal.fire(
+                        'Terjadi Kesalahan!',
+                        'Data Parasut tidak boleh kosong .',
+                        'warning'
+                    )
+                } else {
+                    this.sendData();
+                    this.loading = true;
+                }
+            },
+            sendData: function() {
+                let vm = this;
+                vm.loading = true;
+                let formData = new FormData();
+                formData.append('code', this.code);
+                formData.append('date', this.date);
+                formData.append('activity', this.activity);
+                formData.append('checker', this.checker);
+                formData.append('parachute_id', this.parachuteSelect);
+                this.parachuteItems.forEach((item, index) => {
+                    if (item.file) {
+                        formData.append(`items[${index}][file]`, item.file);
+                        formData.append(`items[${index}][description]`, item.description);
+                    }
+                });
+                axios.post('/parachute-inspection', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    })
+                    .then(function(response) {
+                        vm.loading = false;
+                        let message = response?.data?.message;
+                        if (!message) {
+                            message = 'Data berhasil disimpan'
+                        }
+                        const data = response?.data?.data;
+                        toastr.success(message);
+                        setTimeout(function() {
+                            window.location.href = '/parachute-inspection';
+                        }, 1000);
+                    })
+                    .catch(function(error) {
+                        vm.loading = false;
+                        console.log(error);
+                        let message = error?.response?.data?.message;
+                        if (!message) {
+                            message = 'Terdapat kesalahan..'
+                        }
+                        toastr.error(message);
+                    });
+            },
+
+            onSelcected: function(id) {
+                this.parachuteDetail = this.parachute.filter((item) => {
+                    return item.id == id;
+                })[0]
+
+            },
+            submitFormEdit: function() {
+                if (this.parachuteDetail['serial_number'] == '') {
+                    Swal.fire(
+                        'Terjadi Kesalahan!',
+                        'Serial Number tidak boleh kosong.',
+                        'warning'
+                    )
+                } else if (this.parachuteDetail['type'] == '') {
+                    Swal.fire(
+                        'Terjadi Kesalahan!',
+                        'Tipe Parasut tidak boleh kosong.',
+                        'warning'
+                    )
+                } else if (this.parachuteDetail['part_number'] == '') {
+                    Swal.fire(
+                        'Terjadi Kesalahan!',
+                        'Part Number tidak boleh kosong .',
+                        'warning'
+                    )
+                } else {
+                    this.sendDataEdit();
+                    this.loading = true;
+                }
+            },
+            sendDataEdit: function() {
+                let vm = this;
+                vm.loading = true;
+                axios.patch('/parachute/' + this.parachuteDetail['id'], {
+                        serialNumber: this.parachuteDetail['serial_number'],
+                        type: this.parachuteDetail['type'],
+                        partNumber: this.parachuteDetail['part_number'],
+                    })
+                    .then(function(response) {
+                        vm.loading = false;
+
+                        let message = response?.data?.message;
+                        if (!message) {
+                            message = 'Data berhasil disimpan'
+                        }
+
+                        const data = response?.data?.data;
+
+                        toastr.success(message);
+                        setTimeout(function() {
+                            window.location.href = '/parachute';
+                        }, 1000);
+                    })
+
+                    .catch(function(error) {
+                        vm.loading = false;
+                        console.log(error);
+                        let message = error?.response?.data?.message;
+                        if (!message) {
+                            message = 'Something wrong...'
+                        }
+                        toastr.error(message);
+                    });
+            },
+        },
+    })
+</script>
+
+<script>
+    $(function() {
+        var Table = $('#parachute-table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '/parachute-inspection/datatables',
+                data: function(d) {
+                    d.number = $('.searchNumber').val();
+                    d.date_start = app.date_start;
+                    d.date_end = app.date_end;
+                    d.type = app.parachuteType;
+                }
+            },
+            columns: [
+
+                {
+                    data: 'date',
+                    name: 'date',
+                    render: function(data, type, row) {
+                        return `<div  class="text-center font-weight-bolder">${data}</div>`;
+                    }
+                },
+                {
+                    data: 'number',
+                    name: 'number',
+                    render: function(data, type, row) {
+                        return `<div  class="text-center font-weight-bolder">${data}</div>`;
+                    }
+                },
+
+                {
+                    data: 'category',
+                    name: 'category',
+                    render: function(data, type, row) {
+                        return `<div  class="text-center font-weight-bolder">${data}</div>`;
+                    }
+                },
+                {
+                    data: 'type',
+                    name: 'type',
+                    render: function(data, type, row) {
+                        return `<div  class="text-center font-weight-bolder">${data}</div>`;
+                    }
+                },
+                {
+                    data: 'part_number',
+                    name: 'part_number',
+                    render: function(data, type, row) {
+                        return `<div class="text-center font-weight-bolder">${data}</div>`;
+                    }
+                },
+                {
+                    data: 'serial_number',
+                    name: 'serial_number',
+                    render: function(data, type) {
+                        return `<div class="text-center font-weight-bolder">${data}</div>`;
+                    }
+                },
+                {
+                    data: 'action',
+                    name: 'action',
+                    orderable: false,
+                },
+
+            ],
+            searching: false, // Menonaktifkan pencarian
+            order: [
+                [3, 'desc']
+            ]
+        });
+
+        $(".searchNumber").keyup(function() {
+            Table.draw();
+        });
+
+        $('#parachute-table').on('click', 'tr .btn-delete', function(e) {
+            e.preventDefault();
+            // alert('click');
+            const id = $(this).attr('data-id');
+            console.log('delete_id:', id);
+            const $row = $(this).closest('tr');
+            const rowData = Table.row($row).data();
+            const itemNumber = rowData.number;
+            Swal.fire({
+                title: 'Yakin ingin menghapus data ?',
+                html: `Kode : <strong>${itemNumber}</strong> akan dihapuskan.`,
+                // text: "The data will be deleted",
+                icon: 'warning',
+                reverseButtons: true,
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Delete',
+                cancelButtonText: 'Cancel',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return axios.delete('/parachute-inspection/' + id)
+                        .then(function(response) {
+                            console.log(response.data);
+                        })
+                        .catch(function(error) {
+                            console.log(error.data);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops',
+                                text: 'Something wrong',
+                            })
+                        });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Data berhasil dihapus',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // window.location.reload();
+                            Table.ajax.reload();
+                        }
+                    })
+                }
+            })
+        })
+
+        $(document).on('click', '.btn-edit-parasut', function(e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            if (typeof app !== 'undefined' && app.onSelcected) {
+                app.onSelcected(id);
+            }
+        });
+    })
+</script>
+@endsection
