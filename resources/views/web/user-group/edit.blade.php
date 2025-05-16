@@ -45,13 +45,14 @@
                 <div class="card-body pt-4">
                     <form @submit.prevent="onSubmit" enctype="multipart/form-data">
                         <div class="card">
-
+                            <!--begin::Card header-->
                             <div class="card-header">
                                 <div class="card-title">
-                                    <h3>Tambah Grup</h3>
+                                    <h3>Edit Grup</h3>
                                 </div>
                             </div>
 
+                            <!--begin::Card body-->
                             <div class="card-body pt-0">
                                 <div class="row align-items-center my-10">
                                     <div class="col-md-2">
@@ -61,9 +62,13 @@
                                         <input type="text" v-model="model.name" class="form-control form-control-sm" placeholder="Masukkan nama grup" />
                                     </div>
                                 </div>
-                                <table class="table table-hover table-rounded table-striped border gy-7 gs-7">
+                                <!--begin::Table-->
+                                <!-- <pre>@{{ model }}</pre> -->
+                                <table class="table align-middle table-row-bordered table-sm">
+                                    <!--begin::Table head-->
                                     <?php $colspan = 5 ?>
-                                    <thead class="bg-light-danger">
+                                    <thead class="bg-light-primary">
+                                        <!--begin::Table row-->
                                         <tr class="text-start text-gray-700 fw-bolder fs-7 text-uppercase gs-0 align-middle">
                                             <th class="min-w-100px ps-3" rowspan="2">Nama Akses</th>
                                             <th colspan="{{ $colspan - 1 }}" class="text-center">Hak Akses</th>
@@ -110,9 +115,11 @@
                                                 </div>
                                             </th>
                                         </tr>
+                                        <!--end::Table row-->
                                     </thead>
-
+                                    <!--end::Table head-->
                                     <?php $tab = html_entity_decode('&nbsp;&nbsp;&nbsp;&nbsp;'); ?>
+                                    <!--begin::Table body-->
                                     <tbody class="fw-bold text-gray-600">
                                         @foreach($permissions as $permission)
                                         <tr>
@@ -183,9 +190,12 @@
                                         @endforeach
                                         @endforeach
                                     </tbody>
+                                    <!--end::Table body-->
                                 </table>
+                                <!--end::Table-->
                             </div>
                             <div class="modal-footer">
+
                                 <a href="/user-group" type="button" class="btn btn-secondary me-5 mb-4">Kembali</a>
                                 <button type="submit" class="btn btn-success me-5 mb-4" :data-kt-indicator="loading ? 'on' : null" :disabled="loading">
                                     <span class="indicator-label">Simpan</span>
@@ -193,6 +203,7 @@
                                         <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                                 </button>
                             </div>
+                            <!--end::Card-->
                         </div>
                     </form>
                 </div>
@@ -231,14 +242,15 @@
 </script>
 <script>
     const permissions = <?php echo Illuminate\Support\Js::from($permissions) ?>;
+    const credentialPermissions = <?php echo Illuminate\Support\Js::from(json_decode($user_group->permissions)) ?>;
     let app = new Vue({
         el: '#app',
         data() {
             return {
                 permissions,
                 model: {
-                    name: '',
-                    permissions: [],
+                    name: '{{ $user_group->name }}',
+                    permissions: credentialPermissions,
                     checkedAll: {
                         view: false,
                         add: false,
@@ -277,15 +289,15 @@
                         permissions
                     } = self.model;
                     self.loading = true;
-                    const response = await axios.post('/user-group', {
+                    const response = await axios.patch('/user-group/{{ $user_group->id }}', {
                         name,
-                        permissions: JSON.stringify(permissions),
+                        permissions,
                     });
                     if (response) {
                         console.log(response)
                         let message = response?.data?.message;
                         if (!message) {
-                            message = 'User Group berhasil disimpan'
+                            message = 'User Group berhasil diupdate'
                         }
                         toastr.success(message);
                         const toastrTimeOut = setTimeout(redirect, 500);
