@@ -13,9 +13,12 @@ Route::get('/', function () {
 Route::controller(ParachuteController::class)->prefix('/parachute')->group(function () {
     Route::get('/datatables', 'indexData')->name('parachute.indexData');
     Route::get('/', 'index')->name('parachute.index');
+    Route::get('/import', 'showImportForm')->name('parachute.page-import');
+    Route::post('/import', 'import')->name('parachute.import');
     Route::post('/', 'store')->name('parachute.post');
     Route::patch('/{id}', 'update')->name('parachute.update');
     Route::delete('/{id}', 'destroy')->name('parachute.destroy');
+    Route::post('/delete-multiple', 'deleteMultiple')->name('parachute.delete-multiple');
 });
 
 Route::controller(ParachuteInspectionController::class)->prefix('/parachute-inspection')->group(function () {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Parachute;
+use App\Services\ParachuteImportService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,14 @@ class ParachuteController extends Controller
     /**
      * Display a listing of the resource.
      */
+
+
+    protected $importService;
+
+    public function __construct(ParachuteImportService $importService)
+    {
+        $this->importService = $importService;
+    }
 
     public function indexData(Request $request)
     {
@@ -129,9 +138,49 @@ class ParachuteController extends Controller
         }
     }
 
+    public function showImportForm()
+    {
+        return view('web.parachute.import', []);
+    }
+
+
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|file|mimes:xlsx,xls,csv|max:10240'
+        ]);
+
+        try {
+            $file = $request->file('excel_file');
+            $filePath = $file->getRealPath();
+
+            $importService = new ParachuteImportService();
+            $result = $importService->import($filePath);
+            return back()->with('success', 'Berhasil mengimpor ' . count($result) . ' data');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+
     /**
      * Remove the specified resource from storage.
      */
+
+    public function deleteMultiple(Request $request)
+    {
+        $ids = $request->input('ids');
+
+        try {
+            Parachute::whereIn('id', $ids)->delete();
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
     public function destroy(string $id)
     {
         try {
