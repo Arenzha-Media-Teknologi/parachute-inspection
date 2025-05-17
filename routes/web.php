@@ -41,6 +41,7 @@ Route::controller(UserController::class)->prefix('/user')->group(function () {
     Route::get('/', 'index')->name('user.index');
     Route::get('/data', 'data')->name('user.data');
     Route::get('/create', 'create')->name('user.create');
+    Route::get('/edit/{id}', 'edit')->name('user.edit');
     Route::post('/', 'store')->name('user.post');
     Route::patch('/{id}', 'update')->name('user.update');
     Route::delete('/{id}', 'destroy')->name('user.destroy');
