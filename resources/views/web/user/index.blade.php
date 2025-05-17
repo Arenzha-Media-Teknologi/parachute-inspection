@@ -60,6 +60,7 @@
                             </div>
                             <button type="button" class="btn btn-danger" data-kt-customer-table-select="delete_selected">Delete Selected</button>
                         </div>
+
                     </div>
                 </div>
                 <div class="card-body pt-0">

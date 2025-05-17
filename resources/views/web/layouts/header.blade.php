@@ -229,7 +229,12 @@
                         <!--end::Menu item-->
                         <!--begin::Menu item-->
                         <div class="menu-item px-5">
-                            <a href="authentication/layouts/corporate/sign-in.html" class="menu-link px-5">Sign Out</a>
+                            <form method="POST" action="{{ route('logout') }}" id="logout-form">
+                                @csrf
+                                <a href="#" class="menu-link px-5" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    Sign Out
+                                </a>
+                            </form>
                         </div>
                         <!--end::Menu item-->
                     </div>
