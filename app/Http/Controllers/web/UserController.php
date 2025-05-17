@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserGroup;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -135,5 +136,26 @@ class UserController extends Controller
         $user->save();
 
         return response()->json(['success' => true, 'message' => 'User updated successfully']);
+    }
+
+
+    public function destroy(string $id)
+    {
+        try {
+            $user = User::find($id);
+            $user->delete();
+            return [
+                'message' => 'data has been deleted',
+                'error' => false,
+                'code' => 200,
+            ];
+        } catch (Exception $e) {
+            return [
+                'message' => 'internal error',
+                'error' => true,
+                'code' => 500,
+                'errors' => $e->getMessage(),
+            ];
+        }
     }
 }
