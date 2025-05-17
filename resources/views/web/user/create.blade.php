@@ -244,7 +244,7 @@
                                     <div class="row">
                                         <div class="col-lg-12 fv-row">
                                             <div class="form-check form-switch form-check-custom form-check-solid mt-2">
-                                                <input class="form-check-input" type="checkbox" value="" id="flexSwitchDefault" />
+                                                <input class="form-check-input" v-model="mobile_access" type="checkbox" id="flexSwitchDefault" />
                                                 <label class="form-check-label" for="flexSwitchDefault">
 
                                                 </label>
@@ -256,11 +256,6 @@
                                 <!--end::Col-->
                             </div>
                             <!--end::Input group company -->
-
-
-
-
-
                             <hr>
                         </div>
                         <!--end::Custom fields-->
