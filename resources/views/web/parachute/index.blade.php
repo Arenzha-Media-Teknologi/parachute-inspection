@@ -277,6 +277,7 @@
                     return;
                 }
 
+
                 Swal.fire({
                     title: 'Delete Selected Items?',
                     text: `Apakah yakin ingin menghapus data parasut yang diceklis.`,
@@ -289,6 +290,7 @@
                     if (result.isConfirmed) {
                         axios.post('/parachute/delete-multiple', {
                                 ids: this.selectedParachute
+
                             })
                             .then(response => {
                                 Swal.fire('Success', 'Data berhasil dihapus', 'success');

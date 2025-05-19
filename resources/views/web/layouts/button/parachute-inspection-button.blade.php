@@ -1,5 +1,6 @@
 <div class="text-center">
-    <a href="#" class="btn btn-sm btn-warning hover-scale btn-detail me-2" data-id="{{ $model->id }}" data-bs-toggle="modal" data-bs-target="#kt_modal_detail">
+    <!-- <a href="#" class="btn btn-sm btn-warning hover-scale btn-detail me-2" data-id="{{ $model->id }}" data-bs-toggle="modal" data-bs-target="#kt_modal_detail"> -->
+    <a href="/parachute-inspection/edit/{{ $model->id }}" class="btn btn-sm btn-warning hover-scale me-2" data-id="{{ $model->id }}">
         <i class="fas fa-file-alt fs-4 me-2"></i> Riwayat
     </a>
 
