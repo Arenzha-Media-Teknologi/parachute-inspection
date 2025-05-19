@@ -22,7 +22,7 @@
                     </li>
 
                     <li class="breadcrumb-item text-muted">
-                        <a href="/parachute" class="text-muted text-hover-primary">User</a>
+                        <a href="/user" class="text-muted text-hover-primary">User</a>
                     </li>
 
                     <li class="breadcrumb-item">
@@ -45,7 +45,7 @@
                     <div class="card-title">
                         <div class="d-flex align-items-center position-relative my-1">
                             <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i>
-                            <input type="text" data-kt-customer-table-filter="search" class="form-control form-control-solid w-250px ps-13 searchNumber" placeholder="Cari Data User" />
+                            <input type="text" data-kt-customer-table-filter="search" class="form-control form-control-solid w-250px ps-13 searchAll" placeholder="Cari Data User" />
                         </div>
                     </div>
                     <div class="card-toolbar">
@@ -60,6 +60,7 @@
                             </div>
                             <button type="button" class="btn btn-danger" data-kt-customer-table-select="delete_selected">Delete Selected</button>
                         </div>
+
                     </div>
                 </div>
                 <div class="card-body pt-0">
@@ -120,7 +121,7 @@
             ajax: {
                 url: "{{ route('user.index') }}",
                 data: function(d) {
-                    d.number = $('.searchNumber').val()
+                    d.search_all = $('.searchAll').val();
                 }
             },
             columns: [{
@@ -157,7 +158,7 @@
             ]
         });
 
-        $(".searchNumber").keyup(function() {
+        $(".searchAll").keyup(function() {
             Table.draw();
         });
 
