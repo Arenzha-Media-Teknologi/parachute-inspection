@@ -23,7 +23,8 @@ Route::controller(ParachuteInspectionController::class)->prefix('/parachute-insp
     Route::get('/', 'index')->name('parachute-inspection.index');
     Route::get('/generate-code', 'generateCode')->name('parachute-inspection.generateCode');
     Route::post('/', 'store')->name('parachute-inspection.post');
-    // Route::patch('/{id}', 'update')->name('parachute-inspection.update');
+    Route::get('/edit/{id}', 'edit')->name('parachute-inspection.edit');
+    Route::post('/{id}', 'update')->name('parachute-inspection.update');
     Route::delete('/{id}', 'destroy')->name('parachute-inspection.destroy');
 });
 

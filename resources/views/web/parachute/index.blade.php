@@ -431,8 +431,8 @@
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Delete',
-                cancelButtonText: 'Cancel',
+                confirmButtonText: 'Hapus',
+                cancelButtonText: 'Batal',
                 showLoaderOnConfirm: true,
                 preConfirm: () => {
                     return axios.delete('/parachute/' + id)

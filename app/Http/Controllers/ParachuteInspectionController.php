@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
 class ParachuteInspectionController extends Controller
@@ -62,7 +63,7 @@ class ParachuteInspectionController extends Controller
     public function index()
     {
         // return view('web.parachute-inspection.index');
-        $parachuteInspection = ParachuteInspection::with('parachute')->orderBy('id', 'desc')->get();
+        $parachuteInspection = ParachuteInspection::with(['parachute', 'items'])->orderBy('id', 'desc')->get();
         $parachute = Parachute::orderBy('id', 'desc')->get();
         return view('web.parachute-inspection.index', [
             'parachute_inspection' => $parachuteInspection,
@@ -156,5 +157,85 @@ class ParachuteInspectionController extends Controller
         $newCode = "PR-{$dateStr}-{$padded}";
 
         return response()->json(['code' => $newCode]);
+    }
+
+    public function edit(string $id)
+    {
+        $parachuteInspection = ParachuteInspection::with(['parachute', 'items'])->find($id);
+        // return $parachuteInspection;
+        $parachute = Parachute::orderBy('id', 'desc')->get();
+        $newCode = $this->generateCode();
+
+        return view('web.parachute-inspection.edit', [
+            'parachute_inspection' => $parachuteInspection,
+            'parachute' => $parachute,
+            'new_code' => $newCode,
+        ]);
+    }
+
+    public function update(Request $request, string $id)
+    {
+        // $user_id = Auth::user()->id;
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'activity' => 'nullable|string|max:255',
+            'checker' => 'nullable|string|max:255',
+        ]);
+        // return $request->all();
+        try {
+            DB::beginTransaction();
+            // $parachuteInspection = ParachuteInspection::with(['parachute', 'items'])->find($id);
+            // $parachuteInspection->date = $validated['date'];
+            // $parachuteInspection->activity_name = $validated['activity'];
+            // $parachuteInspection->person_in_charge = $validated['checker'];
+            // // $parachuteInspection->created_by = $user_id;
+            // $parachuteInspection->save();
+            $parachuteInspection = ParachuteInspection::with(['parachute', 'items'])->findOrFail($id);
+            $parachuteInspection->update([
+                'date' => $validated['date'],
+                'activity_name' => $validated['activity'] ?? null,
+                'person_in_charge' => $validated['checker'] ?? null,
+                // 'created_by' => $user_id ?? null,
+            ]);
+            if ($request->has('items') && is_array($request->items)) {
+                $newItemIds = collect($request->items)->pluck('id')->filter()->all();
+                foreach ($parachuteInspection->items as $existingItem) {
+                    if (!in_array($existingItem->id, $newItemIds)) {
+                        Storage::disk('public')->delete($existingItem->image_url);
+                        $existingItem->delete();
+                    }
+                }
+                foreach ($request->items as $index => $item) {
+                    if (empty($item['id']) && isset($item['file'])) {
+                        $file = $request->file("items.$index.file");
+                        $filePath = $file->store('parachute-files', 'public');
+                        $parachuteInspection->items()->create([
+                            'description' => $item['description'] ?? null,
+                            'image_url' => $filePath,
+                            'image_file_name' => $file->getClientOriginalName(),
+                            'image_file_size' => $file->getSize(),
+                            'created_at' => isset($item['created']) ? Carbon::parse($item['created'])->format('Y-m-d H:i:s') : now(),
+                        ]);
+                    }
+                    if (!empty($item['id']) && isset($item['description'])) {
+                        $existingItem = $parachuteInspection->items->firstWhere('id', $item['id']);
+                        if ($existingItem && $existingItem->description !== $item['description']) {
+                            $existingItem->update(['description' => $item['description']]);
+                        }
+                    }
+                }
+            }
+            DB::commit();
+            return response()->json([
+                'message' => 'Data berhasil diperbaharui',
+                'data' => $parachuteInspection->load('items'),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat memperbaharui data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
