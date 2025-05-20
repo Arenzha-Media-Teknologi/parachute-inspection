@@ -8,6 +8,7 @@ use App\Models\UserGroup;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
@@ -21,6 +22,10 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
+
+        // $group_id = Auth::user()->user_groups->permissions;
+        // $permissions = UserGroup::where('id', $group_id)->pluck('permissions')->first();
+        // return $group_id;
 
         if ($request->ajax()) {
 
