@@ -11,4 +11,10 @@ class UserGroup extends Model
     use HasFactory;
     use SoftDeletes;
     protected $guarded = [];
+
+
+    public function users()
+    {
+        return $this->hasMany(User::class, 'user_group_id');
+    }
 }

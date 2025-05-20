@@ -14,6 +14,8 @@ $userLoginPermissions = [];
 if (request()->session()->has('userLoginPermissions')) {
 $userLoginPermissions = request()->session()->get('userLoginPermissions');
 }
+
+$permission = json_decode(Auth::user()->user_groups->permissions);
 @endphp
 
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
@@ -82,7 +84,9 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                         </div>
 
                         <div class="d-flex align-items-center gap-2">
+                            @if(in_array("add_parachute_check", $permission))
                             <button class="btn btn-primary" @click="onModalOpen" data-bs-toggle="modal" data-bs-target="#kt_modal_create"> Tambah Periksa </button>
+                            @endif
                             <!-- <button class="btn btn-success"> Laporan </button> -->
                             <div class="dropdown">
                                 <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"> Laporan </button>
