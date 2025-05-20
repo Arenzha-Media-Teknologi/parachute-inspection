@@ -87,8 +87,113 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 </div>
             </div>
 
-            <!-- Modals (keep your existing modals) -->
-            <!-- ... -->
+            <div class="modal fade" tabindex="-1" id="kt_modal_create">
+                <div class="modal-dialog modal-dialog-centered mw-650px">
+                    <div class="modal-content">
+                        <form class="form" @submit.prevent="submitForm">
+                            <div class="modal-header" id="kt_modal_add_customer_header">
+                                <h2 class="fw-bold">Tambah Parasut</h2>
+
+                            </div>
+                            <div class="modal-body py-10 px-lg-17">
+
+                                <div class="scroll-y me-n7 pe-7" id="kt_modal_add_customer_scroll" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#kt_modal_add_customer_header" data-kt-scroll-wrappers="#kt_modal_add_customer_scroll" data-kt-scroll-offset="300px">
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Serial Number
+                                            <span class="ms-1" data-bs-toggle="tooltip" title="Serial Number Harus unik">
+                                                <i class="ki-outline ki-information-5 text-gray-500 fs-6"></i>
+                                            </span>
+                                        </label>
+                                        <input type="text" class="form-control form-control-solid" placeholder="" v-model="serialNumber" />
+                                    </div>
+
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Jenis Parasut</label>
+                                        <select class="form-select form-select-solid" v-model="category">
+                                            <option value="">- PILIH JENIS PARASUT - </option>
+                                            <option value="PARASUT ORANG (PUO)">PARASUT ORANG (PUO)</option>
+                                            <option value="PARASUT BARANG (PUB)">PARASUT BARANG (PUB)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Tipe Parasut</label>
+                                        <input type="text" class="form-control form-control-solid" placeholder="" v-model="type" />
+                                    </div>
+
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Part Number</label>
+                                        <input type="text" class="form-control form-control-solid" placeholder="" v-model="partNumber" />
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="modal-footer flex-center">
+                                <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-success" :data-kt-indicator="loading ? 'on' : null" :disabled="loading">
+                                    <span class="indicator-label">Simpan</span>
+                                    <span class="indicator-progress">Please wait...
+                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" tabindex="-1" id="kt_modal_edit">
+                <div class="modal-dialog modal-dialog-centered mw-650px">
+                    <div class="modal-content">
+                        <form class="form" @submit.prevent="submitFormEdit">
+                            <div class="modal-header" id="kt_modal_add_customer_header">
+                                <h2 class="fw-bold">Edit Parasut</h2>
+
+                            </div>
+                            <div class="modal-body py-10 px-lg-17">
+
+                                <div class="scroll-y me-n7 pe-7" id="kt_modal_add_customer_scroll" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#kt_modal_add_customer_header" data-kt-scroll-wrappers="#kt_modal_add_customer_scroll" data-kt-scroll-offset="300px">
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Serial Number
+                                            <span class="ms-1" data-bs-toggle="tooltip" title="Serial Number Harus unik">
+                                                <i class="ki-outline ki-information-5 text-gray-500 fs-6"></i>
+                                            </span>
+                                        </label>
+                                        <input type="text" class="form-control form-control-solid" placeholder="" v-model="parachuteDetail.serial_number" />
+                                    </div>
+
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Jenis Parasut</label>
+                                        <select class="form-select form-select-solid" v-model="parachuteDetail.category">
+                                            <option value="">- PILIH JENIS PARASUT - </option>
+                                            <option value="PARASUT ORANG (PUO)">PARASUT ORANG (PUO)</option>
+                                            <option value="PARASUT BARANG (PUB)">PARASUT BARANG (PUB)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Tipe Parasut</label>
+                                        <input type="text" class="form-control form-control-solid" placeholder="" v-model="parachuteDetail.type" />
+                                    </div>
+
+                                    <div class="fv-row mb-7">
+                                        <label class="required fs-6 fw-semibold mb-2">Part Number</label>
+                                        <input type="text" class="form-control form-control-solid" placeholder="" v-model="parachuteDetail.part_number" />
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="modal-footer flex-center">
+                                <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-success" :data-kt-indicator="loading ? 'on' : null" :disabled="loading">
+                                    <span class="indicator-label">Simpan</span>
+                                    <span class="indicator-progress">Please wait...
+                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -287,6 +392,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     return;
                 }
 
+
                 Swal.fire({
                     title: 'Delete Selected Items?',
                     text: `Apakah yakin ingin menghapus data parasut yang diceklis.`,
@@ -299,6 +405,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     if (result.isConfirmed) {
                         axios.post('/parachute/delete-multiple', {
                                 ids: this.selectedParachute
+
                             })
                             .then(response => {
                                 Swal.fire('Success', 'Data berhasil dihapus', 'success');

@@ -30,13 +30,14 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', 'destroy')->name('parachute.destroy');
         Route::post('/delete-multiple', 'deleteMultiple')->name('parachute.delete-multiple');
     });
-
+    
     Route::controller(ParachuteInspectionController::class)->prefix('/parachute-inspection')->group(function () {
         Route::get('/datatables', 'indexData')->name('parachute-inspection.indexData');
         Route::get('/', 'index')->name('parachute-inspection.index');
         Route::get('/generate-code', 'generateCode')->name('parachute-inspection.generateCode');
         Route::post('/', 'store')->name('parachute-inspection.post');
-        // Route::patch('/{id}', 'update')->name('parachute-inspection.update');
+        Route::get('/edit/{id}', 'edit')->name('parachute-inspection.edit');
+        Route::post('/{id}', 'update')->name('parachute-inspection.update');
         Route::delete('/{id}', 'destroy')->name('parachute-inspection.destroy');
     });
 

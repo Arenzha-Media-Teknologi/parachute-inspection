@@ -204,7 +204,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                                         </thead>
                                         <tbody v-if="parachuteItems.length">
                                             <tr v-for="(item,index) in parachuteItems">
-                                                <td class="border-0"> <input type="file" ref="file" accept="image/*" class="form-control form-control-sm" v-on:change="handleFileUpload($event, index)">
+                                                <td class="border-0"> <input type="file" accept="image/*" class="form-control form-control-sm" v-on:change="handleFileUpload($event, index)">
                                                     <div v-if="item.previewUrl" class="mt-2">
                                                         <img :src="item.previewUrl" alt="Preview" style="max-width: 200px; max-height: 100px;" />
                                                     </div>
@@ -233,6 +233,128 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                                                 <!-- <td class="border-0"><input type="file" class="form-control form-control-sm" style="width: 100%;"></td> -->
                                                 <td class="border-0"><input type="text" class="form-control form-control-sm" style="width: 100%;"></td>
                                                 <td class="border-0"><button type="button" class="btn btn-sm btn-light"><i class="fas fa-fw fa-trash"></i></button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer flex-center">
+                            <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-success" :data-kt-indicator="loading ? 'on' : null" :disabled="loading">
+                                <span class="indicator-label">Simpan</span>
+                                <span class="indicator-progress">Please wait...
+                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal fade" tabindex="-1" id="kt_modal_detail">
+            <div class="modal-dialog modal-dialog-centered mw-650px modal-fullscreen-sm-down">
+                <form class="form" @submit.prevent="submitFormDetail(parachuteDetail.id)">
+                    <div class="modal-content">
+                        <div class="modal-header" id="kt_modal_add_customer_header">
+                            <div class="card" style="width: 100%;">
+                                <div class="p-6 m-3">
+                                    <div class="text-center" style="background-color: turquoise;">
+                                        <h2 class="text-white fw-bold pt-3 pb-3">Riwayat Pemeriksaan Parasut</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-body py-10 px-lg-17">
+                            <div class="scroll-y me-n7 pe-7" id="kt_modal_add_customer_scroll" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#kt_modal_add_customer_header" data-kt-scroll-wrappers="#kt_modal_add_customer_scroll" data-kt-scroll-offset="300px">
+                                <h2 class="mt-0 mb-3">Informasi Parasut</h2>
+                                <div class="d-flex justify-content-between gap-5">
+                                    <div class="col-6">
+                                        <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Kode Pemeriksaan </label>
+                                            <input type="text" class="form-control form-control" placeholder="" v-model="parachuteDetail.number" disabled />
+                                        </div>
+                                        <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Tanggal Pemeriksaan </label>
+                                            <input type="date" class="form-control form-control" placeholder="" v-model="parachuteDetail.date" />
+                                        </div>
+                                        <!-- <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Nama Kegiatan</label>
+                                            <input type="text" class="form-control form-control" placeholder="" v-model="parachuteDetail.activity_name" />
+                                        </div> -->
+                                        <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Diperiksa Oleh</label>
+                                            <input type="text" class="form-control form-control" placeholder="" v-model="parachuteDetail.person_in_charge" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-6">
+                                        <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Jenis Parasut</label>
+                                            <input type="text" class="form-control form-control" placeholder="" :value="parachuteDetail?.parachute?.category" disabled />
+                                        </div>
+                                        <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Tipe Parasut</label>
+                                            <input type="text" class="form-control form-control" placeholder="" :value="parachuteDetail?.parachute?.type" disabled />
+                                        </div>
+                                        <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Part Number</label>
+                                            <input type="text" class="form-control form-control" placeholder="" :value="parachuteDetail?.parachute?.part_number" disabled />
+                                        </div>
+                                        <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Serial Number </label>
+                                            <input type="text" class="form-control form-control" placeholder="" :value="parachuteDetail?.parachute?.serial_number" disabled />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="fv-row mb-7">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h2 class="mb-0">Daftar Hasil Pemeriksaan Parasut</h2>
+                                        <a class="btn btn-primary btn-sm text-white" @click="addDetailItems">
+                                            <i class="fa fa-plus"></i>
+                                        </a>
+                                    </div>
+                                    <!-- cek data -->
+                                    <!-- <pre>@{{ detailItems }}</pre>-->
+                                    <table class="table table-sm table-bordered align-middle" style="width: 100%">
+                                        <thead>
+                                            <tr>
+                                                <th class="border-0" style="width: 20%">Waktu Periksa</th>
+                                                <th class="border-0" style="width: 40%">Keterangan</th>
+                                                <th class="border-0" style="width: 35%">Gambar</th>
+                                                <th class="text-center border-0" style="width: 5%">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody v-if="detailItems.length">
+                                            <tr v-for="(item,index) in detailItems">
+                                                <td class="border-0 align-top" style="width: 20%">
+                                                    <input type="datetime-local" class="form-control form-control-sm" :value="formatDateForInput(item.created)" @input="item.created = $event.target.value" />
+                                                </td>
+                                                <td class="border-0 align-top" style="width: 40%">
+                                                    <textarea v-if="item.file" v-model="item.description" class="form-control form-control-sm" rows="6" required></textarea>
+                                                    <textarea v-else v-model="item.description" class="form-control form-control-sm" rows="1" required></textarea>
+                                                </td>
+                                                <td class="border-0" style="width: 35%"> <input type="file" accept="image/*" class="form-control form-control-sm" v-on:change="handleFileUploadDetail($event, index)">
+                                                    <div v-if="item.file || item.previewUrl" class="mt-2">
+                                                        <img v-if="item.previewUrl" :src="item.previewUrl" alt="Preview" style="max-width: 200px; max-height: 100px;" />
+                                                        <img v-else :src="`/storage/${item.file}`" alt="Preview" style="max-width: 200px; max-height: 100px;" />
+                                                    </div>
+                                                </td>
+                                                <td class="border-0 align-top" style="width: 5%">
+                                                    <button type="button" class="btn btn-sm btn-light" @click="removeDetailItem(index)"><i class="fas fa-fw fa-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tbody v-else>
+                                            <tr>
+                                                <td colspan="3" class="border-0 text-center text-muted">Belum ada item pemeriksaan.</td>
+                                            </tr>
+                                            <tr class="border-0" style="visibility: hidden; height: 0;">
+                                                <td class="border-0" style="width: 20%"><input type="datetime" class="form-control form-control-sm" style="width: 100%;"></td>
+                                                <td class="border-0" style="width: 40%"><input type="text" class="form-control form-control-sm" style="width: 100%;"></td>
+                                                <td class="border-0" style="width: 35%"><input type="file" class="form-control form-control-sm" style="width: 100%;"></td>
+                                                <td class="border-0" style="width: 5%"><button type="button" class="btn btn-sm btn-light"><i class="fas fa-fw fa-trash"></i></button></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -351,6 +473,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
 
             parachuteSelect: '',
             parachuteItems: [],
+            detailItems: [],
 
             date_start: '',
             date_end: '',
@@ -483,11 +606,23 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     event.target.value = null;
                     return;
                 }
-                this.parachuteItems[index].file = file;
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.parachuteItems[index].previewUrl = e.target.result;
-                };
+
+                if (!this.parachuteItems[index]) {
+                    console.error(`parachuteItems[${index}] tidak ditemukan!`);
+                    // return;
+                    this.$set(this.parachuteItems, index, {
+                        file: '',
+                        description: '',
+                        previewUrl: ''
+                    });
+                }
+                if (this.parachuteItems[index]) {
+                    this.parachuteItems[index].file = file;
+                    reader.onload = (e) => {
+                        this.parachuteItems[index].previewUrl = e.target.result;
+                    };
+                }
                 reader.readAsDataURL(file);
             },
 
@@ -565,69 +700,163 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
             },
 
             onSelcected: function(id) {
-                this.parachuteDetail = this.parachute.filter((item) => {
+                this.parachuteDetail = this.parachuteInspection.filter((item) => {
                     return item.id == id;
-                })[0]
+                })[0];
+                console.log('parachuteDetail:', this.parachuteDetail);
+                if (this.parachuteDetail.items.length > 0) {
+                    this.parachuteDetail.items.forEach(item => {
+                        this.detailItems.push({
+                            created: item.created_at || "",
+                            description: item.description || "",
+                            file: item.image_url || "",
+                            previewUrl: null,
+                        });
+                    });
+                }
+                console.log('parachuteDetail.items :', this.parachuteDetail.items);
+            },
+            formatDateForInput(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                const pad = (n) => n.toString().padStart(2, '0');
+                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+            },
+            addDetailItems: function() {
+                this.detailItems.push({
+                    "created": "",
+                    "description": "",
+                    "file": "",
+                    "previewUrl": null,
+                });
+            },
+            removeDetailItem: function(index) {
+                // this.detailItems.splice(index, 1);
+                this.detailItems.splice(index, 1, {
+                    ...this.detailItems[index],
+                    file: file,
+                    previewUrl: e.target.result
+                });
 
             },
-            submitFormEdit: function() {
-                if (this.parachuteDetail['serial_number'] == '') {
+            handleFileUploadDetail(event, index) {
+                console.log(event);
+                const file = event.target.files[0];
+                if (!file) return;
+                const maxSize = 2 * 1024 * 1024; // 2MB
+                const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (file.size > maxSize) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Ukuran File Terlalu Besar',
+                        text: 'Ukuran file maksimal 2MB.',
+                    });
+                    event.target.value = null;
+                    return;
+                }
+                if (!allowedImageTypes.includes(file.type)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Tipe File Tidak Valid',
+                        text: 'Hanya file gambar (JPG, PNG, GIF, WEBP) yang diperbolehkan.',
+                    });
+                    event.target.value = null;
+                    return;
+                }
+                const reader = new FileReader();
+
+                if (!this.detailItems[index]) {
+                    console.error(`detailItems[${index}] tidak ditemukan!`);
+                    // return;
+                    this.$set(this.detailItems, index, {
+                        created: '',
+                        description: '',
+                        file: '',
+                        previewUrl: ''
+                    });
+                }
+                if (this.detailItems[index]) {
+                    this.detailItems[index].file = file;
+                    reader.onload = (e) => {
+                        this.detailItems[index].previewUrl = e.target.result;
+                    };
+                }
+                reader.readAsDataURL(file);
+            },
+
+            submitFormDetail: function(id) {
+                console.log('submitFormDetail_id:', id);
+                // return;
+                if (this.parachuteDetail['date'] == '') {
                     Swal.fire(
                         'Terjadi Kesalahan!',
-                        'Serial Number tidak boleh kosong.',
+                        'Tanggal Pemeriksaan tidak boleh kosong.',
                         'warning'
-                    )
-                } else if (this.parachuteDetail['type'] == '') {
+                    );
+                    // } else if (this.parachuteDetail['activity_name'] == '') {
+                    //     Swal.fire(
+                    //         'Terjadi Kesalahan!',
+                    //         'Nama Kegiatan tidak boleh kosong.',
+                    //         'warning'
+                    //     )
+                } else if (this.parachuteDetail['person_in_charge'] == '') {
                     Swal.fire(
                         'Terjadi Kesalahan!',
-                        'Tipe Parasut tidak boleh kosong.',
-                        'warning'
-                    )
-                } else if (this.parachuteDetail['part_number'] == '') {
-                    Swal.fire(
-                        'Terjadi Kesalahan!',
-                        'Part Number tidak boleh kosong .',
+                        'Nama Petugas tidak boleh kosong.',
                         'warning'
                     )
                 } else {
-                    this.sendDataEdit();
+                    this.sendDataDetail(id);
                     this.loading = true;
                 }
             },
-            sendDataEdit: function() {
+            sendDataDetail: function(id) {
                 let vm = this;
                 vm.loading = true;
-                axios.patch('/parachute/' + this.parachuteDetail['id'], {
-                        serialNumber: this.parachuteDetail['serial_number'],
-                        type: this.parachuteDetail['type'],
-                        partNumber: this.parachuteDetail['part_number'],
+                let formData = new FormData();
+                formData.append('code', this.parachuteDetail['number']);
+                formData.append('date', this.parachuteDetail['date']);
+                formData.append('activity', this.parachuteDetail['activity_name']);
+                formData.append('checker', this.parachuteDetail['person_in_charge']);
+                formData.append('parachute_id', this.parachuteDetail['parachute_id']);
+                this.parachuteItems.forEach((item, index) => {
+                    if (item.file) {
+                        formData.append(`items[${index}][created]`, item.file);
+                        formData.append(`items[${index}][description]`, item.description);
+                        formData.append(`items[${index}][file]`, item.file);
+                    }
+                });
+                console.log('sendDataDetail:', id);
+                console.log('formData_detail:', formData);
+                // return;
+                axios.post('/parachute-inspection/' + id, formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
                     })
                     .then(function(response) {
                         vm.loading = false;
-
                         let message = response?.data?.message;
                         if (!message) {
                             message = 'Data berhasil disimpan'
                         }
-
                         const data = response?.data?.data;
-
                         toastr.success(message);
                         setTimeout(function() {
-                            window.location.href = '/parachute';
+                            // window.location.href = '/parachute-inspection';
                         }, 1000);
                     })
-
                     .catch(function(error) {
                         vm.loading = false;
                         console.log(error);
                         let message = error?.response?.data?.message;
                         if (!message) {
-                            message = 'Something wrong...'
+                            message = 'Terdapat kesalahan..'
                         }
                         toastr.error(message);
                     });
             },
+
         },
     })
 </script>
@@ -698,7 +927,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 },
 
             ],
-            searching: false, // Menonaktifkan pencarian
+            searching: false,
             order: [
                 [3, 'desc']
             ]
@@ -725,8 +954,8 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Delete',
-                cancelButtonText: 'Cancel',
+                confirmButtonText: 'Hapus',
+                cancelButtonText: 'Batal',
                 showLoaderOnConfirm: true,
                 preConfirm: () => {
                     return axios.delete('/parachute-inspection/' + id)
@@ -737,8 +966,8 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                             console.log(error.data);
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Oops',
-                                text: 'Something wrong',
+                                title: 'Oops..',
+                                text: 'Terdapat kesalahan!',
                             })
                         });
                 },
@@ -758,6 +987,15 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 }
             })
         })
+
+        $(document).on('click', '.btn-detail', function(e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            console.log('edit_id:', id);
+            if (typeof app !== 'undefined' && app.onSelcected) {
+                app.onSelcected(id);
+            }
+        });
 
         $(document).on('click', '.btn-edit-parasut', function(e) {
             e.preventDefault();
