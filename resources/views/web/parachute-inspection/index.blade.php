@@ -18,6 +18,7 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
 $permission = json_decode(Auth::user()->user_groups->permissions);
 @endphp
 
+
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
     <div class="toolbar" id="kt_toolbar">
         <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
@@ -92,14 +93,20 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                                 <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"> Laporan </button>
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <a class="dropdown-item" href="/parachute-inspection/report" target="_blank">
+                                        <!-- <a class="dropdown-item" href="/parachute-inspection/report" target="_blank">
                                             <i class="fas fa-calendar-day me-2 text-success"></i> Laporan Pemeriksaan
-                                        </a>
+                                        </a> -->
+                                        <button class="dropdown-item" @click="openReport">
+                                            <i class="fas fa-calendar-day me-2 text-success"></i> Laporan Pemeriksaan
+                                        </button>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="/parachute-inspection/report-doc" target="_blank">
+                                        <!-- <a class="dropdown-item" href="/parachute-inspection/report-doc" target="_blank">
                                             <i class="fas fa-calendar-alt me-2 text-danger"></i> Lampiran Pemeriksaan
-                                        </a>
+                                        </a> -->
+                                        <button class="dropdown-item" @click="openAttachment">
+                                            <i class="fas fa-calendar-alt me-2 text-danger"></i> Lampiran Pemeriksaan
+                                        </button>
                                     </li>
                                 </ul>
                             </div>
@@ -452,6 +459,12 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
         };
     })
 </script>
+
+<script>
+    window.parachuteReportPreviewUrl = "{{ route('parachute-inspection.reportPreview') }}";
+    window.parachuteReportAttachmentPreviewUrl = "{{ route('parachute-inspection.reportAttachmentPreview') }}";
+</script>
+
 <script>
     const parachuteInspection = <?php echo Illuminate\Support\Js::from($parachute_inspection) ?>;
     const parachute = <?php echo Illuminate\Support\Js::from($parachute) ?>;
@@ -511,6 +524,29 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 }
                 $('#parachute-table').DataTable().ajax.reload();
             },
+            openReport() {
+                if (!this.date_start) {
+                    alert('Tanggal mulai harus diisi');
+                    return;
+                }
+                let url = `${window.parachuteReportPreviewUrl}?date_start=${this.date_start}`;
+                // let url = `/parachute-inspection/report/preview?date_start=${this.date_start}`;
+                if (this.date_end) url += `&date_end=${this.date_end}`;
+                if (this.parachuteType) url += `&type=${encodeURIComponent(this.parachuteType)}`;
+                window.open(url, '_blank');
+            },
+            openAttachment() {
+                if (!this.date_start) {
+                    alert('Tanggal mulai harus diisi');
+                    return;
+                }
+                let url = `${window.parachuteReportAttachmentPreviewUrl}?date_start=${this.date_start}`;
+                // let url = `/parachute-inspection/report-attachment?date_start=${this.date_start}`;
+                if (this.date_end) url += `&date_end=${this.date_end}`;
+                if (this.parachuteType) url += `&type=${encodeURIComponent(this.parachuteType)}`;
+                window.open(url, '_blank');
+            },
+
 
             generateCode() {
                 // const today = new Date();
