@@ -74,7 +74,8 @@
     <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>
     <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
     <script src="{{ asset('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> -->
+    <script src="{{ asset('assets/js/axios.min.js') }}"></script>
     <!--end::Global Javascript Bundle-->
     @if(env('APP_ENV') == 'local')
     <script src="{{ asset('assets/js/vue.js') }}"></script>
