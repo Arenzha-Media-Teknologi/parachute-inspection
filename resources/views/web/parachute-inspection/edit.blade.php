@@ -233,6 +233,7 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
             if (this.parachuteDetail.items.length > 0) {
                 this.parachuteDetail.items.forEach(item => {
                     this.detailItems.push({
+                        id: item.id || null,
                         created: item.created_at || "",
                         description: item.description || "",
                         file: item.image_url || "",
@@ -251,6 +252,7 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
             },
             addDetailItems: function() {
                 this.detailItems.push({
+                    "id": null,
                     "created": "",
                     "description": "",
                     "file": "",
@@ -285,22 +287,20 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                     return;
                 }
                 const reader = new FileReader();
-
-                if (!this.detailItems[index]) {
-                    console.error(`detailItems[${index}] tidak ditemukan!`);
-                    // return;
-                    this.$set(this.detailItems, index, {
-                        created: '',
-                        description: '',
-                        file: '',
-                        previewUrl: ''
-                    });
-                }
                 if (this.detailItems[index]) {
                     this.detailItems[index].file = file;
                     reader.onload = (e) => {
                         this.detailItems[index].previewUrl = e.target.result;
                     };
+                } else {
+                    this.$set(this.detailItems, index, {
+                        id: null,
+                        created: '',
+                        description: '',
+                        file: file,
+                        previewUrl: ''
+                    });
+                    console.error(`detailItems[${index}] tidak ditemukan!`);
                 }
                 reader.readAsDataURL(file);
             },
@@ -340,8 +340,6 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                 formData.append('activity', this.parachuteDetail['activity_name']);
                 formData.append('checker', this.parachuteDetail['person_in_charge']);
                 formData.append('parachute_id', this.parachuteDetail['parachute_id']);
-                console.log('sendDataDetail:', id);
-                this.parachuteItems = this.detailItems;
                 // this.parachuteItems.forEach((item, index) => {
                 //     if (item.id) {
                 //         formData.append(`items[${index}][id]`, item.id);
@@ -352,6 +350,8 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                 //         formData.append(`items[${index}][file]`, item.file);
                 //     }
                 // });            
+                console.log('sendDataDetail:', id);
+                this.parachuteItems = this.detailItems;
                 this.parachuteItems.forEach((item, index) => {
                     if (item.id) {
                         formData.append(`items[${index}][id]`, item.id);

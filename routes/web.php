@@ -30,7 +30,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', 'destroy')->name('parachute.destroy');
         Route::post('/delete-multiple', 'deleteMultiple')->name('parachute.delete-multiple');
     });
-    
+
     Route::controller(ParachuteInspectionController::class)->prefix('/parachute-inspection')->group(function () {
         Route::get('/datatables', 'indexData')->name('parachute-inspection.indexData');
         Route::get('/', 'index')->name('parachute-inspection.index');
@@ -39,6 +39,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/edit/{id}', 'edit')->name('parachute-inspection.edit');
         Route::post('/{id}', 'update')->name('parachute-inspection.update');
         Route::delete('/{id}', 'destroy')->name('parachute-inspection.destroy');
+        Route::get('/report/preview', 'reportPreview')->name('parachute-inspection.reportPreview');
+        Route::get('/report/generate-pdf', 'reportPdf')->name('parachute-inspection.reportPdf');
+        Route::get('/report-attachment/preview', 'reportAttachmentPreview')->name('parachute-inspection.reportAttachmentPreview');
+        Route::get('/report-attachment/generate-pdf', 'reportAttachmentPdf')->name('parachute-inspection.reportAttachmentPdf');
     });
 
     Route::controller(UserGroupController::class)->prefix('/user-group')->group(function () {
