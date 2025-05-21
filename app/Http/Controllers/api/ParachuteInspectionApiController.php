@@ -44,7 +44,7 @@ class ParachuteInspectionApiController extends Controller
             // }
             if (isset($searchKeyword)) {
                 $parachuteInspectionQuery = $parachuteInspectionQuery->where(function ($query) use ($searchKeyword) {
-                    $searchableColumns = ['activity_name', 'person_in_charge'];
+                    $searchableColumns = ['number', 'activity_name', 'person_in_charge'];
                     $searchTerm = strtolower($searchKeyword);
 
                     foreach ($searchableColumns as $column) {
@@ -85,6 +85,21 @@ class ParachuteInspectionApiController extends Controller
     {
         try {
             $parachuteInspection = ParachuteInspection::with(['items', 'parachute'])->find($parachuteInspectionId);
+            // $parachuteInspectionItems = collect($parachuteInspection->items)->map(function ($parachuteInspectionItem) {
+            //     $parachuteInspectionItem->image_url = 'storage/' . $parachuteInspectionItem->image_url;
+            //     return $parachuteInspectionItem;
+            // })->all();
+
+            // // unset($parachuteInspection->id);
+
+            // // $parachuteInspection->items = $parachuteInspectionItems;
+
+
+
+            // $parachuteInspection->items->each(function ($item) {
+            //     $item->image_url = asset('storage/' . $item->image_url); // langsung set asset()
+            //     $item->test = asset('storage/' . $item->image_url); // langsung set asset()
+            // });
 
             return response()->json([
                 'message' => 'OK',
