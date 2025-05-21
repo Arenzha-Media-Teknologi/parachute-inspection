@@ -8,6 +8,7 @@
     <meta name="description" content="Parachute Inspection Information System" />
     <meta name="keywords" content="parachute, inspection, information system" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <meta property="og:locale" content="en_US" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="Parachute Inspection Information System" />
