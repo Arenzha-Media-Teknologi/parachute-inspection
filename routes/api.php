@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Route;
 // });
 
 Route::prefix('auth')->group(function () {
-    Route::get('/login', [AuthApiController::class, 'login']);
+    Route::post('/login', [AuthApiController::class, 'login']);
 });
 
 Route::prefix('general')->group(function () {
