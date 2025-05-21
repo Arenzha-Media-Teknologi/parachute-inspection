@@ -89,6 +89,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                             <button class="btn btn-primary" @click="onModalOpen" data-bs-toggle="modal" data-bs-target="#kt_modal_create"> Tambah Periksa </button>
                             @endif
                             <!-- <button class="btn btn-success"> Laporan </button> -->
+                            @if(in_array("view_report_parachute_check", $permission))
                             <div class="dropdown">
                                 <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"> Laporan </button>
                                 <ul class="dropdown-menu">
@@ -110,6 +111,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                                     </li>
                                 </ul>
                             </div>
+                            @endif
                         </div>
                     </div>
                     <div class="d-flex justify-content-end align-items-center d-none mt-3" data-kt-customer-table-toolbar="selected">
