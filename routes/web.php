@@ -2,14 +2,17 @@
 
 use App\Http\Controllers\ParachuteInspectionController;
 use App\Http\Controllers\web\AuthController;
+use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\UserController;
 use App\Http\Controllers\web\ParachuteController;
 use App\Http\Controllers\web\UserGroupController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('web.dashboard.index');
-})->middleware('auth');
+// Route::get('/', function () {
+//     return view('web.dashboard.index');
+// })
+
+Route::get('/', [DashboardController::class, 'index'])->middleware('auth');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
