@@ -22,7 +22,7 @@
                     </li>
 
                     <li class="breadcrumb-item text-muted">
-                        <a href="/user-group" class="text-muted text-hover-primary">User Group</a>
+                        <a href="/group" class="text-muted text-hover-primary">User Group</a>
                     </li>
 
                     <li class="breadcrumb-item">
@@ -186,7 +186,7 @@
                                 </table>
                             </div>
                             <div class="modal-footer">
-                                <a href="/user-group" type="button" class="btn btn-secondary me-5 mb-4">Kembali</a>
+                                <a href="/group" type="button" class="btn btn-secondary me-5 mb-4">Kembali</a>
                                 <button type="submit" class="btn btn-success me-5 mb-4" :data-kt-indicator="loading ? 'on' : null" :disabled="loading">
                                     <span class="indicator-label">Simpan</span>
                                     <span class="indicator-progress">Please wait...
@@ -277,7 +277,7 @@
                         permissions
                     } = self.model;
                     self.loading = true;
-                    const response = await axios.post('/user-group', {
+                    const response = await axios.post('/group', {
                         name,
                         permissions: JSON.stringify(permissions),
                     });
@@ -291,7 +291,7 @@
                         const toastrTimeOut = setTimeout(redirect, 500);
 
                         function redirect() {
-                            window.location.href = '/user-group';
+                            window.location.href = '/group';
                         }
 
                     }

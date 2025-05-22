@@ -65,7 +65,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
 
                 @if(in_array("view_user_group", $permission))
                 <div class="menu-item">
-                    <a class="menu-link {{ request()->is('user-group*') ? 'active' : '' }}" href="/user-group">
+                    <a class="menu-link {{ request()->is('group*') ? 'active' : '' }}" href="/group">
                         <span class="menu-icon">
                             <i class="ki-outline ki-profile-user fs-2"></i>
                         </span>

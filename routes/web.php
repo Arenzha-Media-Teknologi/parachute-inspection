@@ -48,14 +48,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/report-attachment/generate-pdf', 'reportAttachmentPdf')->name('parachute-inspection.reportAttachmentPdf');
     });
 
-    Route::controller(UserGroupController::class)->prefix('/user-group')->group(function () {
-        Route::get('/datatables', 'indexData')->name('user-group.indexData');
-        Route::get('/', 'index')->name('user-group.index');
-        Route::get('/create', 'create')->name('user-group.create');
-        Route::get('/edit/{id}', 'edit')->name('user-group.edit');
-        Route::post('/', 'store')->name('user-group.post');
-        Route::patch('/{id}', 'update')->name('user-group.update');
-        Route::delete('/{id}', 'destroy')->name('user-group.destroy');
+    Route::controller(UserGroupController::class)->prefix('/group')->group(function () {
+        Route::get('/datatables', 'indexData')->name('group.indexData');
+        Route::get('/', 'index')->name('group.index');
+        Route::get('/create', 'create')->name('group.create');
+        Route::get('/edit/{id}', 'edit')->name('group.edit');
+        Route::post('/', 'store')->name('group.post');
+        Route::patch('/{id}', 'update')->name('group.update');
+        Route::delete('/{id}', 'destroy')->name('group.destroy');
     });
 
     Route::controller(UserController::class)->prefix('/user')->group(function () {

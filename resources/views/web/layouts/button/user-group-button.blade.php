@@ -6,7 +6,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
 
 <div class="text-center">
     @if(in_array("edit_user_group", $permission))
-    <a href="/user-group/edit/{{ $model->id }}" class="btn btn-sm hover-scale btn-warning me-2" title="Edit">
+    <a href="/group/edit/{{ $model->id }}" class="btn btn-sm hover-scale btn-warning me-2" title="Edit">
         <i class="fas fa-pencil-alt fs-4 me-2"></i>Edit
     </a>
     @endif
