@@ -28,7 +28,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     </li>
 
                     <li class="breadcrumb-item text-muted">
-                        <a href="/user-group" class="text-muted text-hover-primary">User Group</a>
+                        <a href="/group" class="text-muted text-hover-primary">User Group</a>
                     </li>
 
                     <li class="breadcrumb-item">
@@ -58,7 +58,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
 
                         <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
                             @if(in_array("add_user_group", $permission))
-                            <a href="/user-group/create" type="button" class="btn btn-primary">Tambah User Group</a>
+                            <a href="/group/create" type="button" class="btn btn-primary">Tambah User Group</a>
                             @endif
                         </div>
 
@@ -73,7 +73,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     </div>
                 </div>
                 <div class="card-body pt-0">
-                    <table class="table table-hover table-rounded table-striped border gy-7 gs-7" id="user-group-table">
+                    <table class="table table-hover table-rounded table-striped border gy-7 gs-7" id="group-table">
                         <thead>
                             <tr>
                                 <th style="font-weight: bolder; text-align:left; font-size:14px;">Nama Group</th>
@@ -134,11 +134,11 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
 
 <script>
     $(function() {
-        var Table = $('#user-group-table').DataTable({
+        var Table = $('#group-table').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
-                url: '/user-group/datatables',
+                url: '/group/datatables',
                 data: function(d) {
                     d.number = $('.searchNumber').val()
                 }
@@ -167,7 +167,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
             Table.draw();
         });
 
-        $('#user-group-table').on('click', 'tr .btn-delete', function(e) {
+        $('#group-table').on('click', 'tr .btn-delete', function(e) {
             e.preventDefault();
             // alert('click');
             const id = $(this).attr('data-id');
@@ -183,7 +183,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 cancelButtonText: 'Cancel',
                 showLoaderOnConfirm: true,
                 preConfirm: () => {
-                    return axios.delete('/user-group/' + id)
+                    return axios.delete('/group/' + id)
                         .then(function(response) {
                             console.log(response.data);
                         })
