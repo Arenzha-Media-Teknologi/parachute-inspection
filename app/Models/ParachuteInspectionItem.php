@@ -11,13 +11,16 @@ class ParachuteInspectionItem extends Model
 
     protected $table = 'parachute_inspection_items';
 
-    protected $fillable = [
-        'parachute_inspection_id',
-        'description',
-        'image_url',
-        'image_file_name',
-        'image_file_size',
-    ];
+    protected $guarded = [];
+
+    // protected $fillable = [
+    //     'parachute_inspection_id',
+    //     'description',
+    //     'image_url',
+    //     'image_file_name',
+    //     'image_file_size',
+    //     'image_file_size',
+    // ];
 
     public function inspection()
     {

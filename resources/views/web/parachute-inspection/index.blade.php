@@ -72,7 +72,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                         <div class="d-flex flex-wrap align-items-center gap-3">
                             <div class="position-relative">
                                 <i class="ki-outline ki-magnifier fs-3 position-absolute top-50 start-0 translate-middle-y ms-4"></i>
-                                <input type="text" class="form-control form-control-solid ps-13" style="width: 220px;" placeholder="Cari Data Parasut" />
+                                <input type="text" class="form-control form-control-solid ps-13 searchNumber" style="width: 220px;" placeholder="Cari Data Parasut" />
                             </div>
 
                             <input type="date" class="form-control" v-model="date_start" style="width: 160px;" />
@@ -112,6 +112,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                                     </li>
                                 </ul>
                             </div> -->
+                            @endif
                         </div>
                     </div>
                     <div class="d-flex justify-content-end align-items-center d-none mt-3" data-kt-customer-table-toolbar="selected">

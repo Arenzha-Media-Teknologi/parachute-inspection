@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Parachute;
 use App\Models\ParachuteInspection;
+use App\Models\ParachuteInspectionItem;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -202,6 +203,7 @@ class ParachuteInspectionController extends Controller
             ]);
             $keptItemIds = [];
             if ($request->has('items') && is_array($request->items)) {
+                $allUpatedData = [];
                 foreach ($request->items as $index => $item) {
                     if (!empty($item['id'])) {
                         $existingItem = $parachuteInspection->items->firstWhere('id', $item['id']);
@@ -218,9 +220,17 @@ class ParachuteInspectionController extends Controller
                                 $updateData['image_file_name'] = $file->getClientOriginalName();
                                 $updateData['image_file_size'] = $file->getSize();
                             }
+
+                            $updateData['created_at'] = isset($item['created']) ? Carbon::parse($item['created'])->format('Y-m-d H:i:s') : now();
+                            // $updateData['created_at'] = '2000-01-01 17:00:00';
+                            $allUpatedData[] = $updateData;
                             if (!empty($updateData)) {
                                 $existingItem->update($updateData);
+                                // $parachuteItem = ParachuteInspectionItem::find($item['id']);
+                                // $parachuteItem->created_at = ParachuteInspectionItem::find($item['id']);
+                                // $allUpatedData[] = ['testtest'];
                             }
+
                             $keptItemIds[] = $existingItem->id;
                         }
                     } elseif (isset($item['file'])) {
@@ -243,6 +253,8 @@ class ParachuteInspectionController extends Controller
                     }
                 }
             }
+            // return $allUpatedData;
+
             DB::commit();
             return response()->json([
                 'message' => 'Data berhasil diperbaharui',

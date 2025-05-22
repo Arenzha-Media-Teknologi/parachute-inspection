@@ -154,7 +154,8 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                             <div class="mb-3">
                                 <div class="row">
                                     <div class="col-md-6 text-end">
-                                        <button type="button" class="btn btn-light">Batal</button>
+                                        <!-- <button type="button" class="btn btn-light">Batal</button> -->
+                                        <a href="/parachute-inspection" type="button" class="btn btn-light">Batal</a>
                                     </div>
                                     <div class="col-md-6">
                                         <button type="submit" class="btn btn-success" :data-kt-indicator="loading ? 'on' : null" :disabled="loading">
