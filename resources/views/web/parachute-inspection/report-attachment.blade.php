@@ -7,6 +7,18 @@
 
     <!-- <title>Lampiran Pemeriksaan Parasut</title> -->
     <style>
+        /* prettier-ignore */
+        @page: first {
+            margin: 0cm 0cm 0.5cm 0cm;
+            /* top, right, bottom, left */
+        }
+
+        /* prettier-ignore */
+        @page {
+            margin: 1.5cm 0cm 0.5cm 0cm;
+            /* top, right, bottom, left */
+        }
+
         html,
         body {
             margin: 0;
@@ -17,23 +29,25 @@
         body {
             font-family: sans-serif;
             font-size: 10px;
-            background-color: #f9f9f9;
+            /* background-color: #f9f9f9; */
+            background-color: #fff;
             /* margin: 20px; */
         }
 
         .card-wrapper {
-            padding: 20px;
+            /* padding: 20px; */
             /* margin halaman */
             /* height: 100vh; */
             box-sizing: border-box;
             page-break-after: always;
+            background-color: #fff;
         }
 
         .card {
             page-break-inside: avoid;
             break-inside: avoid;
-            border: 2px solid green;
-            border-radius: 8px;
+            /* border: 2px solid green; */
+            /* border-radius: 8px; */
             /* sudut melengkung opsional */
             padding: 20px;
             /* ruang di dalam card */
@@ -91,25 +105,41 @@
 </head>
 
 <body>
-
     <div class="card-wrapper">
         <div class="card">
             <table style="width: 100%; margin-bottom: 50px;">
                 <tr>
                     <td style="width: 30%; vertical-align: top;">
-                        <p style="margin: 0; text-align: center; font-weight: bold;">DEPO PEMELIHARAAN 70</p>
-                        <p style="margin: 0; text-align: center; font-weight: bold;">SATUAN PEMELIHARAAN 72</p>
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">DEPO PEMELIHARAAN 70</p>
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">SATUAN PEMELIHARAAN 72</p>
                         <div style="border-bottom: 2px solid black; width: 100%; margin-top: 5px;"></div>
                     </td>
                     <td style="width: 35%; vertical-align: top;"> </td>
                     <td style="width: 30%; text-align: right; vertical-align: top;">
-                        <p style="margin: 0; text-align: center; font-weight: bold;">Lampiran Nota Dinas Dansathar 72</p>
-                        <p style="margin: 0; text-align: center; font-weight: bold;">Nomor B/ND- &emsp; /VI/2024/Sathar 72</p>
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">Lampiran Nota Dinas Dansathar 72</p>
+                        @php
+                        $date = \Carbon\Carbon::parse($periode);
+                        $year = $date->format('Y');
+                        $month = (int) $date->format('m');
+
+                        $romawiBulan = [ '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII' ];
+                        $bulan_romawi = $romawiBulan[$month];
+                        @endphp
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">Nomor B/ND- &emsp;&nbsp; /{{$bulan_romawi}}/{{$year}}/Sathar 72</p>
+                        @php
+                        \Carbon\Carbon::setLocale('id');
+                        @endphp
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">
+                            Tanggal &emsp;&emsp;&emsp;&emsp;&emsp; {{ \Carbon\Carbon::parse($periode)->translatedFormat('F') }} {{$year}}
+                        </p>
                         <div style="border-bottom: 2px solid black; width: 100%; margin-top: 5px; margin-left: auto;"></div>
                     </td>
                 </tr>
             </table>
+
             <h2>DOKUMENTASI KERUSAKAN PARASUT</h2>
+            <div style="border-bottom: 2px solid black; width: 45%; margin-top: 5px; margin-left: auto; margin-right: auto; margin-bottom: 20px;"></div>
+
             <div class="text-center" style="padding-bottom: 50px; display: flex; justify-content: center;">
                 <table class="inspection-table" style="width: 80%;">
                     <tbody>
@@ -132,11 +162,14 @@
                                 $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
                                 @endphp
                                 <p>
-                                    <img src="{{ $base64 }}" style="max-width: 400px; max-height: 250px;" />
-                                    <!-- <img src="{{ asset('storage/' . $subitem->image_url) }}" alt="Preview" style="max-width: 400px; max-height: 300px;" /> -->
+                                    <img src="{{ $base64 }}" style="max-width: 300px; max-height: 200px;" />
+                                    <!-- <img src="{{ asset('storage/' . $subitem->image_url) }}" alt="Preview" style="max-width: 600px; max-height: 400px;" /> -->
                                 </p>
-                                <b> Kerusakan : </b> <br>
-                                <p> - {{ $subitem->description }} </p>
+                                <p style="margin: 0;">
+                                    <b> Kerusakan : </b> <br>
+                                    {{ $subitem->description }} <br>
+                                </p>
+                                <p></p>
 
                                 @endforeach
                             </td>
@@ -149,6 +182,7 @@
                     </tbody>
                 </table>
             </div>
+
         </div>
     </div>
 

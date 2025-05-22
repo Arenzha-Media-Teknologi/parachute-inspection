@@ -32,8 +32,8 @@
         .card {
             page-break-inside: avoid;
             break-inside: avoid;
-            border: 2px solid green;
-            border-radius: 8px;
+            /* border: 2px solid green; */
+            /* border-radius: 8px; */
             /* sudut melengkung opsional */
             padding: 20px;
             /* ruang di dalam card */
@@ -76,7 +76,7 @@
 
         table.inspection-table th,
         table.inspection-table td {
-            /* border: 1px solid #000; */
+            border: 1px solid #000;
             /* border: 1px solid #ccc; */
             /* padding: 6px; */
             padding: 3px;
@@ -103,14 +103,28 @@
             <table style="width: 100%; margin-bottom: 50px;">
                 <tr>
                     <td style="width: 30%; vertical-align: top;">
-                        <p style="margin: 0; text-align: center; font-weight: bold;">DEPO PEMELIHARAAN 70</p>
-                        <p style="margin: 0; text-align: center; font-weight: bold;">SATUAN PEMELIHARAAN 72</p>
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">DEPO PEMELIHARAAN 70</p>
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">SATUAN PEMELIHARAAN 72</p>
                         <div style="border-bottom: 2px solid black; width: 100%; margin-top: 5px;"></div>
                     </td>
                     <td style="width: 35%; vertical-align: top;"> </td>
                     <td style="width: 30%; text-align: right; vertical-align: top;">
-                        <p style="margin: 0; text-align: center; font-weight: bold;">Lampiran Nota Dinas Dansathar 72</p>
-                        <p style="margin: 0; text-align: center; font-weight: bold;">Nomor B/ND- &emsp; /VI/2024/Sathar 72</p>
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">Lampiran Nota Dinas Dansathar 72</p>
+                        @php
+                        $date = \Carbon\Carbon::parse($periode);
+                        $year = $date->format('Y');
+                        $month = (int) $date->format('m');
+
+                        $romawiBulan = [ '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII' ];
+                        $bulan_romawi = $romawiBulan[$month];
+                        @endphp
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">Nomor B/ND- &emsp;&nbsp; /{{$bulan_romawi}}/{{$year}}/Sathar 72</p>
+                        @php
+                        \Carbon\Carbon::setLocale('id');
+                        @endphp
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">
+                            Tanggal &emsp;&emsp;&emsp;&emsp; {{ \Carbon\Carbon::parse($periode)->translatedFormat('F') }} {{$year}}
+                        </p>
                         <div style="border-bottom: 2px solid black; width: 100%; margin-top: 5px; margin-left: auto;"></div>
                     </td>
                 </tr>
@@ -184,17 +198,22 @@
         const btn = this;
         const loading = document.getElementById('loading');
         let date_start = "{{ request('date_start') }}";
+        let periode = "{{ request('periode') }}";
         let date_end = "{{ request('date_end') ?? '' }}";
 
         if (!date_start) {
             alert('Tanggal mulai harus diisi');
             return;
         }
+        if (!periode) {
+            alert('Periode laporan harus diisi');
+            return;
+        }
 
         btn.disabled = true;
         loading.style.display = 'inline';
 
-        let url = "{{ route('parachute-inspection.reportPdf') }}" + "?date_start=" + encodeURIComponent(date_start);
+        let url = "{{ route('parachute-inspection.reportPdf') }}" + "?date_start=" + encodeURIComponent(date_start) + "&periode=" + encodeURIComponent(periode);
         if (date_end) {
             url += "&date_end=" + encodeURIComponent(date_end);
         }

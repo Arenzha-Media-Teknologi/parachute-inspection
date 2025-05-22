@@ -88,28 +88,28 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                             @if(in_array("add_parachute_check", $permission))
                             <button class="btn btn-primary" @click="onModalOpen" data-bs-toggle="modal" data-bs-target="#kt_modal_create"> Tambah Periksa </button>
                             @endif
-                            <!-- <button class="btn btn-success"> Laporan </button> -->
-                            <div class="dropdown">
+                            <button class="btn btn-success" @click="openReportModal"> Laporan </button>
+                            <!-- <a class="dropdown-item" href="/parachute-inspection/report" target="_blank">
+                                <i class="fas fa-calendar-day me-2 text-success"></i> Laporan Pemeriksaan
+                            </a> -->
+                            <!-- <a class="dropdown-item" href="/parachute-inspection/report-doc" target="_blank">
+                                <i class="fas fa-calendar-alt me-2 text-danger"></i> Lampiran Pemeriksaan
+                            </a> -->
+                            <!-- <div class="dropdown">
                                 <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"> Laporan </button>
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <!-- <a class="dropdown-item" href="/parachute-inspection/report" target="_blank">
-                                            <i class="fas fa-calendar-day me-2 text-success"></i> Laporan Pemeriksaan
-                                        </a> -->
                                         <button class="dropdown-item" @click="openReport">
                                             <i class="fas fa-calendar-day me-2 text-success"></i> Laporan Pemeriksaan
                                         </button>
                                     </li>
                                     <li>
-                                        <!-- <a class="dropdown-item" href="/parachute-inspection/report-doc" target="_blank">
-                                            <i class="fas fa-calendar-alt me-2 text-danger"></i> Lampiran Pemeriksaan
-                                        </a> -->
                                         <button class="dropdown-item" @click="openAttachment">
                                             <i class="fas fa-calendar-alt me-2 text-danger"></i> Lampiran Pemeriksaan
                                         </button>
                                     </li>
                                 </ul>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                     <div class="d-flex justify-content-end align-items-center d-none mt-3" data-kt-customer-table-toolbar="selected">
@@ -426,6 +426,31 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
             </div>
         </div>
 
+        <!-- begin Modal -->
+        <div class="modal fade" id="reportDateModal" tabindex="-1" aria-labelledby="reportDateModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reportDateModalLabel">Pilih Periode Laporan</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="date" v-model="reportDate" class="form-control" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-primary" @click="submitReport">
+                            <i class="fas fa-calendar-day text-success"></i> Laporan
+                        </button>
+                        <button type="button" class="btn btn-primary" @click="submitReportAttachment">
+                            <i class="fas fa-calendar-alt text-danger"></i> Lampiran
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end Modal -->
+
     </div>
     <!--end::Container-->
 </div>
@@ -491,6 +516,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
             date_start: '',
             date_end: '',
             parachuteType: '',
+            reportDate: '',
             loading: false,
         },
         methods: {
@@ -524,6 +550,59 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 }
                 $('#parachute-table').DataTable().ajax.reload();
             },
+
+            openReportModal() {
+                this.reportDate = ''; // reset
+                if (!this.date_start) {
+                    alert('Tanggal mulai harus diisi');
+                    return;
+                }
+                const modal = new bootstrap.Modal(document.getElementById('reportDateModal'));
+                modal.show();
+            },
+            submitReport() {
+                if (!this.reportDate) {
+                    alert('Tanggal harus dipilih');
+                    return;
+                }
+                const dateObj = new Date(this.reportDate);
+                const year = dateObj.getFullYear();
+                const month = dateObj.getMonth() + 1; // 1-12
+                const romawiBulan = [
+                    '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'
+                ];
+                const bulanRomawi = romawiBulan[month];
+                const modalEl = document.getElementById('reportDateModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+                // let url = `${window.parachuteReportPreviewUrl}?date_start=${this.date_start}&bulan_romawi=${bulanRomawi}&tahun=${year}`;
+                let url = `${window.parachuteReportPreviewUrl}?date_start=${this.date_start}&periode=${this.reportDate}`;
+                if (this.date_end) url += `&date_end=${this.date_end}`;
+                if (this.parachuteType) url += `&type=${encodeURIComponent(this.parachuteType)}`;
+                window.open(url, '_blank');
+            },
+            submitReportAttachment() {
+                if (!this.reportDate) {
+                    alert('Tanggal harus dipilih');
+                    return;
+                }
+                const dateObj = new Date(this.reportDate);
+                const year = dateObj.getFullYear();
+                const month = dateObj.getMonth() + 1; // 1-12
+                const romawiBulan = [
+                    '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'
+                ];
+                const bulanRomawi = romawiBulan[month];
+                const modalEl = document.getElementById('reportDateModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+                // let url = `${window.parachuteReportAttachmentPreviewUrl}?date_start=${this.date_start}&bulan_romawi=${bulanRomawi}&tahun=${year}`;
+                let url = `${window.parachuteReportAttachmentPreviewUrl}?date_start=${this.date_start}&periode=${this.reportDate}`;
+                if (this.date_end) url += `&date_end=${this.date_end}`;
+                if (this.parachuteType) url += `&type=${encodeURIComponent(this.parachuteType)}`;
+                window.open(url, '_blank');
+            },
+
             openReport() {
                 if (!this.date_start) {
                     alert('Tanggal mulai harus diisi');
@@ -546,7 +625,6 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 if (this.parachuteType) url += `&type=${encodeURIComponent(this.parachuteType)}`;
                 window.open(url, '_blank');
             },
-
 
             generateCode() {
                 // const today = new Date();

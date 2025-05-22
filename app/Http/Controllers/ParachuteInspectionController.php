@@ -313,6 +313,9 @@ class ParachuteInspectionController extends Controller
     {
         $request->validate([
             'date_start' => 'required|date',
+            'periode' => 'required|date',
+            // 'bulan_romawi' => 'required|string',
+            // 'tahun' => 'required|string',
             'date_end' => 'nullable|date',
             'type' => 'nullable|string',
         ]);
@@ -346,9 +349,12 @@ class ParachuteInspectionController extends Controller
             'title' => 'Laporan Pemeriksaan',
             'date' => now()->format('d-m-Y'),
             'data' => $results,
-            'type' => $request->type,
             'date_start' => $request->date_start,
+            'periode' => $request->periode,
+            // 'bulan_romawi' => $request->bulan_romawi,
+            // 'tahun' => $request->tahun,
             'date_end' => $request->date_end,
+            'type' => $request->type,
         ];
 
         return view('web.parachute-inspection.report-preview', $data);
@@ -358,6 +364,9 @@ class ParachuteInspectionController extends Controller
     {
         $request->validate([
             'date_start' => 'required|date',
+            'periode' => 'required|date',
+            // 'bulan_romawi' => 'required|string',
+            // 'tahun' => 'required|string',
             'date_end' => 'nullable|date',
             'type' => 'nullable|string',
         ]);
@@ -393,9 +402,12 @@ class ParachuteInspectionController extends Controller
             'title' => 'Laporan Pemeriksaan Parasut',
             'date' => now()->format('d-m-Y'),
             'data' => $data,
-            'type' => $request->type,
             'date_start' => $request->date_start,
+            'periode' => $request->periode,
+            // 'bulan_romawi' => $request->bulan_romawi,
+            // 'tahun' => $request->tahun,
             'date_end' => $request->date_end,
+            'type' => $request->type,
         ])->render();
 
         $fileName = 'report_' . time() . '.pdf';
@@ -416,6 +428,9 @@ class ParachuteInspectionController extends Controller
     {
         $request->validate([
             'date_start' => 'required|date',
+            'periode' => 'required|date',
+            // 'bulan_romawi' => 'required|string',
+            // 'tahun' => 'required|string',
             'date_end' => 'nullable|date',
             'type' => 'nullable|string',
         ]);
@@ -449,9 +464,12 @@ class ParachuteInspectionController extends Controller
             'title' => 'Lampiran Pemeriksaan Parasut',
             'date' => now()->format('d-m-Y'),
             'data' => $results,
-            'type' => $request->type,
             'date_start' => $request->date_start,
+            'periode' => $request->periode,
+            // 'bulan_romawi' => $request->bulan_romawi,
+            // 'tahun' => $request->tahun,
             'date_end' => $request->date_end,
+            'type' => $request->type,
         ];
 
         return view('web.parachute-inspection.report-attachment-preview', $data);
@@ -460,6 +478,9 @@ class ParachuteInspectionController extends Controller
     {
         $request->validate([
             'date_start' => 'required|date',
+            'periode' => 'required|date',
+            // 'bulan_romawi' => 'required|string',
+            // 'tahun' => 'required|string',
             'date_end' => 'nullable|date',
             'type' => 'nullable|string',
         ]);
@@ -495,9 +516,12 @@ class ParachuteInspectionController extends Controller
             'title' => 'Lampiran Pemeriksaan Parasut',
             'date' => now()->format('d-m-Y'),
             'data' => $data,
-            'type' => $request->type,
             'date_start' => $request->date_start,
+            'periode' => $request->periode,
+            // 'bulan_romawi' => $request->bulan_romawi,
+            // 'tahun' => $request->tahun,
             'date_end' => $request->date_end,
+            'type' => $request->type,
         ])->render();
 
         $fileName = 'report_' . time() . '.pdf';
