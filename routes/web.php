@@ -8,11 +8,7 @@ use App\Http\Controllers\web\ParachuteController;
 use App\Http\Controllers\web\UserGroupController;
 use Illuminate\Support\Facades\Route;
 
-// Route::get('/', function () {
-//     return view('web.dashboard.index');
-// })
 
-Route::get('/', [DashboardController::class, 'index'])->middleware('auth');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
@@ -22,6 +18,10 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function () {
+
+    Route::controller(DashboardController::class)->prefix('/')->group(function () {
+        Route::get('/', 'index')->name('dashboard');
+    });
 
     Route::controller(ParachuteController::class)->prefix('/parachute')->group(function () {
         Route::get('/datatables', 'indexData')->name('parachute.indexData');
