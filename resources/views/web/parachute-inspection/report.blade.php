@@ -22,24 +22,29 @@
         .card-wrapper {
             padding: 20px;
             /* margin halaman */
-            height: 100vh;
+            /* height: 100vh; */
             box-sizing: border-box;
+            page-break-after: always;
         }
 
         .card {
-            border: 2px solid green;
-            border-radius: 8px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            /* border: 2px solid green; */
+            /* border-radius: 8px; */
             /* sudut melengkung opsional */
             padding: 20px;
             /* ruang di dalam card */
             /* margin: 20px auto; */
+            margin-bottom: 20px;
             /* ruang di luar card */
             background-color: #fff;
             /* max-width: 900px; */
-            width: 100%;
-            height: 100%;
-            box-sizing: border-box;
+            /* width: 100%; */
+            /* height: 100%; */
+            /* box-sizing: border-box; */
             /* agar padding tidak melebihi 100% */
+
         }
 
         h2 {
@@ -89,14 +94,28 @@
             <table style="width: 100%; margin-bottom: 50px;">
                 <tr>
                     <td style="width: 30%; vertical-align: top;">
-                        <p style="margin: 0; text-align: center; font-weight: bold;">DEPO PEMELIHARAAN 70</p>
-                        <p style="margin: 0; text-align: center; font-weight: bold;">SATUAN PEMELIHARAAN 72</p>
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">DEPO PEMELIHARAAN 70</p>
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">SATUAN PEMELIHARAAN 72</p>
                         <div style="border-bottom: 2px solid black; width: 100%; margin-top: 5px;"></div>
                     </td>
                     <td style="width: 35%; vertical-align: top;"> </td>
                     <td style="width: 30%; text-align: right; vertical-align: top;">
-                        <p style="margin: 0; text-align: center; font-weight: bold;">Lampiran Nota Dinas Dansathar 72</p>
-                        <p style="margin: 0; text-align: center; font-weight: bold;">Nomor B/ND- &emsp; /VI/2024/Sathar 72</p>
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">Lampiran Nota Dinas Dansathar 72</p>
+                        @php
+                        $date = \Carbon\Carbon::parse($periode);
+                        $year = $date->format('Y');
+                        $month = (int) $date->format('m');
+
+                        $romawiBulan = [ '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII' ];
+                        $bulan_romawi = $romawiBulan[$month];
+                        @endphp
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">Nomor B/ND- &emsp;&nbsp; /{{$bulan_romawi}}/{{$year}}/Sathar 72</p>
+                        @php
+                        \Carbon\Carbon::setLocale('id');
+                        @endphp
+                        <p style="margin: 0; text-align: center; font-weight: bold; font-size: small;">
+                            Tanggal &emsp;&emsp;&emsp;&emsp; {{ \Carbon\Carbon::parse($periode)->translatedFormat('F') }} {{$year}}
+                        </p>
                         <div style="border-bottom: 2px solid black; width: 100%; margin-top: 5px; margin-left: auto;"></div>
                     </td>
                 </tr>
