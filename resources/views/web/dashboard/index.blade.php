@@ -1,6 +1,6 @@
 @extends('web.layouts.app')
 
-@section('title', 'Dashboard')
+@section('title', 'PITL SATHAR72')
 
 @section('prehead')
 @endsection
