@@ -8,6 +8,7 @@
     <meta name="description" content="Parachute Inspection Information System" />
     <meta name="keywords" content="parachute, inspection, information system" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <meta property="og:locale" content="en_US" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="Parachute Inspection Information System" />
@@ -74,7 +75,8 @@
     <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>
     <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
     <script src="{{ asset('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> -->
+    <script src="{{ asset('assets/js/axios.min.js') }}"></script>
     <!--end::Global Javascript Bundle-->
     @if(env('APP_ENV') == 'local')
     <script src="{{ asset('assets/js/vue.js') }}"></script>

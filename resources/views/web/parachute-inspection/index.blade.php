@@ -88,6 +88,8 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                             @if(in_array("add_parachute_check", $permission))
                             <button class="btn btn-primary" @click="onModalOpen" data-bs-toggle="modal" data-bs-target="#kt_modal_create"> Tambah Periksa </button>
                             @endif
+
+                            @if(in_array("view_report_parachute_check", $permission))
                             <button class="btn btn-success" @click="openReportModal"> Laporan </button>
                             <!-- <a class="dropdown-item" href="/parachute-inspection/report" target="_blank">
                                 <i class="fas fa-calendar-day me-2 text-success"></i> Laporan Pemeriksaan
