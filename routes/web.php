@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ParachuteInspectionController;
 use App\Http\Controllers\web\AuthController;
+use App\Http\Controllers\web\BackupController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\UserController;
 use App\Http\Controllers\web\ParachuteController;
@@ -66,5 +67,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/', 'store')->name('user.post');
         Route::patch('/{id}', 'update')->name('user.update');
         Route::delete('/{id}', 'destroy')->name('user.destroy');
+    });
+    Route::controller(BackupController::class)->prefix('/backup')->group(function () {
+        Route::get('/', 'index')->name('backup.index');
+        Route::post('/backup-data', 'backupDatabase')->name('backup.database');
     });
 });
