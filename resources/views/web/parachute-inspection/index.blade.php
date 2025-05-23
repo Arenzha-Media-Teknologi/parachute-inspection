@@ -127,13 +127,13 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     <table class="table table-hover table-rounded table-striped border gy-7 gs-7" id="parachute-table">
                         <thead>
                             <tr>
-                                <th class="text-center">Tgl.Pemeriksaan</th>
-                                <th class="text-center">Kode Pemeriksaan</th>
-                                <th class="text-center">Jenis Parasut</th>
-                                <th class="text-center">Tipe Parasut</th>
-                                <th class="text-center">Part Number</th>
-                                <th class="text-center">Serial Number</th>
-                                <th class="text-center">Aksi</th>
+                                <th class="text-center fw-bold fs-5">Tgl.Pemeriksaan</th>
+                                <th class="text-center  fw-bold fs-5">Kode Pemeriksaan</th>
+                                <th class="text-center  fw-bold fs-5">Jenis Parasut</th>
+                                <th class="text-center  fw-bold fs-5">Tipe Parasut</th>
+                                <th class="text-center  fw-bold fs-5">Part Number</th>
+                                <th class="text-center  fw-bold fs-5">Serial Number</th>
+                                <th class="text-center  fw-bold fs-5">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
