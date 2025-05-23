@@ -163,9 +163,10 @@
                                     <!-- <img src="{{ asset('storage/' . $subitem->image_url) }}" alt="Preview" style="max-width: 600px; max-height: 400px;" /> -->
                                 </p>
                                 <p style="margin: 0;">
-                                    <b> Kerusakan : </b> <br>
-                                    {{ $subitem->description }} <br>
+                                    <b>Kerusakan :</b> <br>
+                                    {!! nl2br(e($subitem->description)) !!}
                                 </p>
+
                                 <p></p>
 
                                 @endforeach
