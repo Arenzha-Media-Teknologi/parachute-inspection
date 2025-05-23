@@ -85,6 +85,19 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 </div>
                 @endif
 
+
+                <div class="menu-item">
+                    <a class="menu-link {{ request()->is('backup*') ? 'active' : '' }}" href="/backup">
+                        <span class="menu-icon">
+                            <i class="ki-outline ki-shield fs-2"></i>
+                        </span>
+                        <span class="menu-title">Backup</span>
+                    </a>
+                </div>
+
+
+
+
             </div>
         </div>
     </div>
