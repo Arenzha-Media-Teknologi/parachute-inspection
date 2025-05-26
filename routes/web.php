@@ -72,4 +72,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', 'index')->name('backup.index');
         Route::post('/backup-data', 'backupDatabase')->name('backup.database');
     });
+
+    Route::get('/backup/download/{filename}', [BackupController::class, 'downloadBackup'])
+        ->name('backup.download');
 });
