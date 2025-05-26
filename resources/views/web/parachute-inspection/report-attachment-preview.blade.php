@@ -138,43 +138,91 @@
             <div style="border-bottom: 2px solid black; width: 35%; margin-top: 5px; margin-left: auto; margin-right: auto; margin-bottom: 30px;"></div>
 
             <div class="text-center" style="padding-bottom: 50px; display: flex; justify-content: center;">
-                <table class="inspection-table" style="width: 80%;">
+                <table class="inspection-table" style="width: 100%;">
                     <tbody>
                         @forelse($data as $item)
+                        {{-- Baris nomor, PN/SN --}}
                         <tr>
-                            <td style=" text-align: center; font-size: medium; width: 5%;"><b>{{ $loop->iteration }}.</b></td>
+                            <td class="text-center" style="font-size: medium; width: 5%;"><b>{{ $loop->iteration }}.</b></td>
                             <td style="text-align: left; font-size: medium;">
-                                <b>PN : </b>{{ $item->parachute->part_number ?? '-' }} &ensp; <b>SN : </b>{{ $item->parachute->serial_number ?? '-' }}
+                                <b>PN : </b>{{ $item['parachute']['part_number'] ?? '-' }}
+                                &ensp;
+                                <b>SN : </b>{{ $item['parachute']['serial_number'] ?? '-'}}
                             </td>
+                            <td></td>
                         </tr>
+
+                        @foreach($item['items'] as $subitem)
                         <tr>
                             <td></td>
-                            <td style="text-align: left; font-size: medium;">
-                                @foreach($item->items as $subitem)
-
+                            <td style="text-align: left; font-size: medium; padding-bottom: 30px">
                                 @php
-                                $path = storage_path('app/public/' . $subitem->image_url);
+                                $path = storage_path('app/public/' . $subitem['image_url']);
+                                if (file_exists($path)) {
                                 $type = pathinfo($path, PATHINFO_EXTENSION);
                                 $data = file_get_contents($path);
                                 $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                                } else {
+                                $base64 = null;
+                                }
                                 @endphp
+
+                                @if($base64)
+                                <img src="{{ $base64 }}" style="max-width: 400px; max-height: 200px;" alt="Preview Image" />
+                                @else
+                                <span class="text-muted">– Gambar tidak ditemukan –</span>
+                                @endif
+                            </td>
+
+                            <td style="text-align: left; font-size: medium;">
+                                <b>KERUSAKAN :</b><br>
+                                @php
+                                $descs = $subitem['item_descriptions'] ?? [];
+                                $utamaDescs = array_filter($descs, fn($d) => strtolower($d['type'] ?? '') === 'utama');
+                                $cadanganDescs = array_filter($descs, fn($d) => strtolower($d['type'] ?? '') === 'cadangan');
+                                @endphp
+
+                                @if(count($utamaDescs))
                                 <p>
-                                    <img src="{{ $base64 }}" style="max-width: 300px; max-height: 200px;" />
-                                    <!-- <img src="{{ asset('storage/' . $subitem->image_url) }}" alt="Preview" style="max-width: 600px; max-height: 400px;" /> -->
+                                    <strong>Utama:</strong>
+                                <ul style="margin: .25em 0 .5em 1.25em; padding: 0;">
+                                    @foreach($utamaDescs as $d)
+                                    <li>{{ $d['description'] }}</li>
+                                    @endforeach
+                                </ul>
                                 </p>
-                                <p style="margin: 0;">
-                                    <b>Kerusakan :</b> <br>
-                                    {!! nl2br(e($subitem->description)) !!}
+                                @endif
+                                @if(count($cadanganDescs))
+                                <p>
+                                    <strong>Cadangan:</strong>
+                                <ul style="margin: .25em 0 .5em 1.25em; padding: 0;">
+                                    @foreach($cadanganDescs as $d)
+                                    <li>{{ $d['description'] }}</li>
+                                    @endforeach
+                                </ul>
                                 </p>
+                                @endif
 
-                                <p></p>
-
-                                @endforeach
+                                @if(!count($descs))
+                                <p>
+                                    <span class="text-muted">– Tidak ada deskripsi –</span>
+                                </p>
+                                @endif
+                                <!-- <p>
+                                    <b>STATUS :</b><br>
+                                    @if( $subitem['status'] == 1 )
+                                <p><b> <span style="color: green;"> Serviceable </span> </b> </p>
+                                @else
+                                <p><b> <span style="color: red;"> Unserviceable </span> </b> </p>
+                                @endif
+                                </p> -->
                             </td>
                         </tr>
+                        @endforeach
+
                         @empty
                         <tr>
-                            <td colspan="2" style="text-align: center; ">Data tidak tersedia</td>
+                            <td colspan="3" class="text-center">Data tidak tersedia</td>
                         </tr>
                         @endforelse
                     </tbody>
