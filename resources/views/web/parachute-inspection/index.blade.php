@@ -59,11 +59,27 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                         <span class="text-white pt-3 pb-3" style="font-size: 35px; font-weight: bold;">Daftar Pemeriksaan</span>
                     </div>
                 </div>
-                <div class="p-6 m-3 col-4">
-                    <div class="text-center" style="background-color: blue;">
-                        <h1 class="pt-3 pb-3" style="color: yellow">Total Pemeriksaan :
-                            <span style="color: orange; font-size: 30px; font-weight: bold;"> @{{ parachuteInspection.length }} </span>
-                        </h1>
+                <div class="p-6 m-3 row">
+                    <div class="col-4">
+                        <div class="text-center" style="background-color: blue;">
+                            <h1 class="pt-3 pb-3" style="color: yellow">Total Pemeriksaan :
+                                <span style="color: orange; font-size: 30px; font-weight: bold;"> @{{ parachuteInspection.length }} </span>
+                            </h1>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center" style="background-color: green;">
+                            <h1 class="pt-3 pb-3" style="color: yellow">Serviceable :
+                                <span style="color: white; font-size: 30px; font-weight: bold;"> @{{ totalServiceable }} </span>
+                            </h1>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center" style="background-color: red;">
+                            <h1 class="pt-3 pb-3" style="color: yellow">Unserviceable :
+                                <span style="color: white; font-size: 30px; font-weight: bold;"> @{{ totalUnserviceable }} </span>
+                            </h1>
+                        </div>
                     </div>
                 </div>
 
@@ -74,14 +90,6 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                                 <i class="ki-outline ki-magnifier fs-3 position-absolute top-50 start-0 translate-middle-y ms-4"></i>
                                 <input type="text" class="form-control form-control-solid ps-13 searchNumber" style="width: 220px;" placeholder="Cari Data Parasut" />
                             </div>
-
-                            <input type="date" class="form-control" v-model="date_start" style="width: 160px;" />
-                            <input type="date" class="form-control" v-model="date_end" style="width: 160px;" />
-                            <select v-model="parachuteType" class="form-select" style="width: 180px;">
-                                <option value="">-- Tipe Parasut --</option>
-                                <option v-for="item in parachute" :value="item.type">@{{ item.type }}</option>
-                            </select>
-                            <button class="btn btn-secondary" @click="applyFilter"><i class="fas fa-filter fs-4"></i>&nbsp; Filter</button>
                         </div>
 
                         <div class="d-flex align-items-center gap-2">
@@ -115,6 +123,22 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                             @endif
                         </div>
                     </div>
+                    <div class="pt-2 pb-2 pe-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="date" class="form-control" v-model="date_start" style="width: 160px;" />
+                            <input type="date" class="form-control" v-model="date_end" style="width: 160px;" />
+                            <select v-model="parachuteType" class="form-select" style="width: 180px;">
+                                <option value="">-- Tipe Parasut --</option>
+                                <option v-for="item in parachute" :value="item.type">@{{ item.type }}</option>
+                            </select>
+                            <select v-model="parachuteStatus" class="form-select" style="width: 180px;">
+                                <option value="">-- Status Perbaikan --</option>
+                                <option value="1">Serviceable</option>
+                                <option value="0">Unserviceable</option>
+                            </select>
+                            <button class="btn btn-secondary" @click="applyFilter"><i class="fas fa-filter fs-4"></i>&nbsp; Filter</button>
+                        </div>
+                    </div>
                     <div class="d-flex justify-content-end align-items-center d-none mt-3" data-kt-customer-table-toolbar="selected">
                         <div class="fw-bold me-5">
                             <span class="me-2" data-kt-customer-table-select="selected_count"></span>Selected
@@ -128,12 +152,14 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                         <thead>
                             <tr>
                                 <th class="text-center fw-bold fs-5">Tgl.Pemeriksaan</th>
-                                <th class="text-center  fw-bold fs-5">Kode Pemeriksaan</th>
-                                <th class="text-center  fw-bold fs-5">Jenis Parasut</th>
-                                <th class="text-center  fw-bold fs-5">Tipe Parasut</th>
-                                <th class="text-center  fw-bold fs-5">Part Number</th>
-                                <th class="text-center  fw-bold fs-5">Serial Number</th>
-                                <th class="text-center  fw-bold fs-5">Aksi</th>
+                                <th class="text-center fw-bold fs-5">Kode Pemeriksaan</th>
+                                <th class="text-center fw-bold fs-5">Jenis Parasut</th>
+                                <th class="text-center fw-bold fs-5">Tipe Parasut</th>
+                                <th class="text-center fw-bold fs-5">Part Number</th>
+                                <th class="text-center fw-bold fs-5">Serial Number</th>
+                                <th class="text-center fw-bold fs-5">Perbaikan</th>
+                                <th class="text-center fw-bold fs-5">User</th>
+                                <th class="text-center fw-bold fs-5">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -519,9 +545,24 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
             date_start: '',
             date_end: '',
             parachuteType: '',
+            parachuteStatus: '',
             reportDate: '',
             loading: false,
         },
+        computed: {
+            totalServiceable() {
+                return this.parachuteInspection.filter(pi => {
+                    return (pi.items || []).some(item =>
+                        (item.status === 1 || item.status === '1') &&
+                        item.status_date
+                    );
+                }).length;
+            },
+            totalUnserviceable() {
+                return this.parachuteInspection.length - this.totalServiceable;
+            }
+        },
+
         methods: {
             applyFilter() {
                 const today = new Date().toISOString().split('T')[0];
@@ -582,6 +623,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 let url = `${window.parachuteReportPreviewUrl}?date_start=${this.date_start}&periode=${this.reportDate}`;
                 if (this.date_end) url += `&date_end=${this.date_end}`;
                 if (this.parachuteType) url += `&type=${encodeURIComponent(this.parachuteType)}`;
+                if (this.parachuteStatus) url += `&status=${encodeURIComponent(this.parachuteStatus)}`;
                 window.open(url, '_blank');
             },
             submitReportAttachment() {
@@ -603,6 +645,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 let url = `${window.parachuteReportAttachmentPreviewUrl}?date_start=${this.date_start}&periode=${this.reportDate}`;
                 if (this.date_end) url += `&date_end=${this.date_end}`;
                 if (this.parachuteType) url += `&type=${encodeURIComponent(this.parachuteType)}`;
+                if (this.parachuteStatus) url += `&status=${encodeURIComponent(this.parachuteStatus)}`;
                 window.open(url, '_blank');
             },
 
@@ -990,6 +1033,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     d.date_start = app.date_start;
                     d.date_end = app.date_end;
                     d.type = app.parachuteType;
+                    d.status = app.parachuteStatus;
                 }
             },
             columns: [
@@ -1033,6 +1077,20 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 {
                     data: 'serial_number',
                     name: 'serial_number',
+                    render: function(data, type) {
+                        return `<div class="text-center font-weight-bolder">${data}</div>`;
+                    }
+                },
+                {
+                    data: 'status',
+                    name: 'status',
+                    render: function(data, type) {
+                        return `<div class="text-center font-weight-bolder">${data}</div>`;
+                    }
+                },
+                {
+                    data: 'user',
+                    name: 'user',
                     render: function(data, type) {
                         return `<div class="text-center font-weight-bolder">${data}</div>`;
                     }

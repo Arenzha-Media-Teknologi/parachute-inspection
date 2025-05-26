@@ -178,7 +178,31 @@
                         <!-- <td style="text-align: left;">{{ $item->description }}</td> -->
                         <td style="text-align: left;">
                             @foreach($item->items as $subitem)
-                            - {{ $subitem->description }}<br>
+
+                            @php
+                            $utamaDescs = $subitem->itemDescriptions->where('type', 'utama');
+                            @endphp
+                            @if($utamaDescs->isNotEmpty())
+                            <div><strong>Utama:</strong></div>
+                            <ul style="margin-top: 0; padding-left: 20px;">
+                                @foreach($utamaDescs as $desc)
+                                <li>{{ $desc->description }}</li>
+                                @endforeach
+                            </ul>
+                            @endif
+
+                            @php
+                            $cadanganDescs = $subitem->itemDescriptions->where('type', 'cadangan');
+                            @endphp
+                            @if($cadanganDescs->isNotEmpty())
+                            <div><strong>Cadangan:</strong></div>
+                            <ul style="margin-top: 0; padding-left: 20px;">
+                                @foreach($cadanganDescs as $desc)
+                                <li>{{ $desc->description }}</li>
+                                @endforeach
+                            </ul>
+                            @endif
+
                             @endforeach
                         </td>
                     </tr>
