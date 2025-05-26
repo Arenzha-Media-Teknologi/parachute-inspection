@@ -3,6 +3,7 @@
 @section('title', 'PITL SATHAR72')
 
 @section('prehead')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @endsection
 
 @section('content')
@@ -45,20 +46,25 @@
                                     <button id="backupBtn" class="btn btn-success">
                                         <i class="fas fa-file-export me-2"></i> Buat Backup Sekarang
                                     </button>
+                                    <button id="cancelBackupBtn" class="btn btn-outline-danger ms-2" style="display: none;">
+                                        <i class="fas fa-times-circle me-2"></i> Batalkan
+                                    </button>
 
 
-                                    <div id="progressContainer" class="mt-3" style="display:none;">
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span id="progressStatus">Mempersiapkan backup...</span>
-                                            <span id="progressPercent">0%</span>
-                                        </div>
-                                        <div class="progress" style="height: 20px;">
+                                    <div id="progressContainer" class="mt-3" style="display: none;">
+                                        <div class="progress mb-2" style="height: 25px;">
                                             <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
-                                                role="progressbar" style="width: 0%"></div>
+                                                role="progressbar" style="width: 0%;"></div>
                                         </div>
-                                        <div class="mt-2 text-muted small">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            <span id="fileInfo">Ukuran file: -</span>
+                                        <div class="d-flex justify-content-between">
+                                            <small id="progressStatus">Mempersiapkan backup...</small>
+                                            <small id="progressPercent">0%</small>
+                                        </div>
+                                        <div class="mt-1">
+                                            <small id="fileInfo" class="text-muted">Ukuran file: -</small>
+                                        </div>
+                                        <div>
+                                            <small id="estimatedTime" class="text-muted"></small>
                                         </div>
                                     </div>
                                     <br>
@@ -122,154 +128,227 @@
             const progressStatus = document.getElementById('progressStatus');
             const fileInfo = document.getElementById('fileInfo');
             const alertContainer = document.getElementById('alertContainer');
+            const estimatedTime = document.getElementById('estimatedTime');
+            const cancelBackupBtn = document.getElementById('cancelBackupBtn');
 
-            function formatBytes(bytes, decimals = 2) {
+            // Variabel untuk cancel request
+            const CancelToken = axios.CancelToken;
+            let cancelRequest;
+
+            // Format bytes ke readable format
+            const formatBytes = (bytes, decimals = 2) => {
                 if (bytes === 0) return '0 Bytes';
                 const k = 1024;
                 const dm = decimals < 0 ? 0 : decimals;
                 const sizes = ['Bytes', 'KB', 'MB', 'GB'];
                 const i = Math.floor(Math.log(bytes) / Math.log(k));
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-            }
+            };
 
-            function showAlert(message, type = 'success') {
+            // Format waktu
+            const formatTime = (seconds) => {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = Math.floor(seconds % 60);
+                return `${minutes}m ${remainingSeconds}s`;
+            };
+
+            // Fungsi untuk menampilkan alert
+            const showAlert = (message, type = 'success') => {
+                // Clear existing alerts first
+                while (alertContainer.firstChild) {
+                    alertContainer.removeChild(alertContainer.firstChild);
+                }
+
                 const alert = document.createElement('div');
                 alert.className = `alert alert-${type} alert-dismissible fade show`;
                 alert.role = 'alert';
                 alert.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            `;
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
                 alertContainer.appendChild(alert);
 
                 setTimeout(() => {
                     alert.classList.remove('show');
                     setTimeout(() => alert.remove(), 150);
                 }, 5000);
+            };
+
+            // Fungsi untuk trigger download
+            const triggerDownload = (url, filename) => {
+                const anchor = document.createElement('a');
+                anchor.href = url;
+                anchor.download = filename || 'backup_' + new Date().toISOString().slice(0, 10) + '.zip';
+                anchor.style.display = 'none';
+                document.body.appendChild(anchor);
+                anchor.click();
+                document.body.removeChild(anchor);
+            };
+
+            // Fungsi untuk reset UI
+            const resetUI = () => {
+                backupBtn.disabled = false;
+                backupBtn.innerHTML = '<i class="fas fa-file-export me-2"></i> Buat Backup Sekarang';
+                progressContainer.style.display = 'none';
+            };
+
+            // Fungsi untuk update progress
+            const updateProgress = (percent, status, size = null, timeRemaining = null) => {
+                progressBar.style.width = `${percent}%`;
+                progressPercent.textContent = `${percent}%`;
+                progressStatus.textContent = status;
+
+                if (size) {
+                    fileInfo.textContent = `Ukuran file: ${formatBytes(size)}`;
+                }
+
+                if (timeRemaining !== null) {
+                    estimatedTime.textContent = `Perkiraan waktu tersisa: ${formatTime(timeRemaining)}`;
+                }
+            };
+
+            // Event listener untuk tombol cancel
+            if (cancelBackupBtn) {
+                cancelBackupBtn.addEventListener('click', function() {
+                    if (cancelRequest) {
+                        cancelRequest('Backup dibatalkan oleh pengguna');
+                        showAlert('Backup dibatalkan', 'warning');
+                        resetUI();
+                    }
+                });
             }
 
-            backupBtn.addEventListener('click', function() {
+            // Event listener untuk tombol backup
+            backupBtn.addEventListener('click', async () => {
+                // Reset UI state
                 progressBar.style.width = '0%';
-                progressPercent.textContent = '0%';
-                progressStatus.textContent = 'Mempersiapkan backup...';
-                fileInfo.textContent = 'Ukuran file: -';
+                progressBar.style.backgroundColor = '';
+                updateProgress(0, 'Mempersiapkan backup...');
+                progressContainer.style.display = 'block';
+                estimatedTime.textContent = '';
 
                 backupBtn.disabled = true;
                 backupBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Memproses...';
-                progressContainer.style.display = 'block';
 
-                let downloadSize = 0;
-                let lastUpdateTime = 0;
-                let downloadSpeed = 0;
+                // Variabel untuk tracking progress dan estimasi waktu
+                let startTime = Date.now();
                 let lastLoaded = 0;
+                let lastTime = startTime;
 
-                axios({
+                try {
+                    // 1. Request untuk membuat backup
+                    const response = await axios({
                         method: 'post',
                         url: '{{ route("backup.database") }}',
-                        responseType: 'blob',
                         headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-Requested-With': 'XMLHttpRequest'
                         },
-                        onDownloadProgress: function(progressEvent) {
-                            const now = Date.now();
-                            const elapsedTime = (now - lastUpdateTime) / 1000;
+                        cancelToken: new CancelToken(function executor(c) {
+                            cancelRequest = c;
+                        }),
+                        onUploadProgress: (progressEvent) => {
+                            if (progressEvent.lengthComputable) {
+                                const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
 
-                            if (progressEvent.total) {
-                                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                                progressBar.style.width = percentCompleted + '%';
-                                progressPercent.textContent = percentCompleted + '%';
+                                // Hitung kecepatan download dan estimasi waktu
+                                const currentTime = Date.now();
+                                const timeDiff = (currentTime - lastTime) / 1000; // dalam detik
+                                const loadedDiff = progressEvent.loaded - lastLoaded;
 
-                                if (elapsedTime > 0.5) {
-                                    downloadSpeed = (progressEvent.loaded - lastLoaded) / elapsedTime;
+                                if (timeDiff > 0) {
+                                    const speed = loadedDiff / timeDiff; // bytes per second
+                                    const remainingBytes = progressEvent.total - progressEvent.loaded;
+                                    const timeRemaining = remainingBytes / speed;
+
+                                    updateProgress(
+                                        percent,
+                                        `Membuat backup... (${percent}%)`,
+                                        progressEvent.total,
+                                        timeRemaining
+                                    );
+
                                     lastLoaded = progressEvent.loaded;
-                                    lastUpdateTime = now;
+                                    lastTime = currentTime;
+                                } else {
+                                    updateProgress(
+                                        percent,
+                                        `Membuat backup... (${percent}%)`,
+                                        progressEvent.total
+                                    );
                                 }
-
-                                const speedText = downloadSpeed > 0 ? ` (${formatBytes(downloadSpeed)}/detik)` : '';
-                                progressStatus.textContent = `Mengunduh backup... ${speedText}`;
-                                fileInfo.textContent = `Ukuran file: ${formatBytes(progressEvent.total)}`;
                             }
                         }
-                    })
-                    .then(response => {
-                        if (!(response.data instanceof Blob)) {
-                            throw new Error('Format response tidak valid');
-                        }
-
-                        const url = window.URL.createObjectURL(response.data);
-                        const a = document.createElement('a');
-                        a.href = url;
-
-                        let filename = 'backup_' + new Date().toISOString().slice(0, 10) + '.sql';
-                        const contentDisposition = response.headers['content-disposition'];
-                        if (contentDisposition) {
-                            const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
-                            if (filenameMatch && filenameMatch[1]) {
-                                filename = filenameMatch[1];
-                            }
-                        }
-
-                        a.download = filename;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        window.URL.revokeObjectURL(url);
-
-                        showAlert('Backup database berhasil dibuat dan diunduh', 'success');
-
-                        // Tambahkan reload halaman setelah 1.5 detik
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
-                    })
-                    .catch(error => {
-                        let errorMessage = 'Terjadi kesalahan saat membuat backup';
-
-                        if (error.response) {
-                            if (error.response.status === 422) {
-                                errorMessage = 'Validasi gagal: ' +
-                                    Object.values(error.response.data.errors).join(', ');
-                            } else if (error.response.data && error.response.data.message) {
-                                errorMessage = error.response.data.message;
-                            } else {
-                                errorMessage = `Error ${error.response.status}: ${error.response.statusText}`;
-                            }
-
-                            if (error.response.data instanceof Blob) {
-                                const reader = new FileReader();
-                                reader.onload = () => {
-                                    try {
-                                        const errorData = JSON.parse(reader.result);
-                                        if (errorData.message) {
-                                            errorMessage = errorData.message;
-                                        }
-                                    } catch (e) {
-                                        console.error('Error parsing blob response', e);
-                                    }
-                                    showAlert(errorMessage, 'danger');
-                                };
-                                reader.readAsText(error.response.data);
-                                return;
-                            }
-                        } else if (error.request) {
-                            errorMessage = 'Tidak ada response dari server. Periksa koneksi internet Anda.';
-                        } else {
-                            errorMessage = error.message;
-                        }
-
-                        showAlert(errorMessage, 'danger');
-                    })
-                    .finally(() => {
-                        backupBtn.disabled = false;
-                        backupBtn.innerHTML = '<i class="fas fa-file-export me-2"></i> Buat Backup Sekarang';
-                        setTimeout(() => {
-                            progressContainer.style.display = 'none';
-                        }, 2000);
                     });
+
+                    if (response.data.success && response.data.download_url) {
+                        showAlert('Backup berhasil dibuat. Memulai download...', 'success');
+                        updateProgress(100, 'Mengunduh backup...', response.data.file_size);
+
+                        // 2. Trigger download langsung tanpa axios
+                        // Karena kita sudah punya URL download dari server
+                        triggerDownload(response.data.download_url, response.data.filename);
+
+                        updateProgress(100, 'Backup selesai!', response.data.file_size);
+                        showAlert('Backup berhasil diunduh', 'success');
+
+                        // Reset UI setelah 3 detik
+                        setTimeout(() => {
+                            resetUI();
+                            window.location.reload();
+                        }, 3000);
+                    } else {
+                        throw new Error(response.data.message || 'Gagal mendapatkan URL download');
+                    }
+                } catch (error) {
+                    console.error('Error details:', error);
+
+                    let errorMessage = 'Terjadi kesalahan saat membuat backup';
+
+                    if (axios.isCancel(error)) {
+                        errorMessage = 'Backup dibatalkan';
+                        console.log('Request canceled:', error.message);
+                    } else if (error.response) {
+                        // Server responded with error status
+                        if (error.response.data && typeof error.response.data === 'object') {
+                            errorMessage = error.response.data.message || errorMessage;
+                        } else if (typeof error.response.data === 'string') {
+                            errorMessage = error.response.data;
+                        }
+
+                        // Handle specific status codes
+                        if (error.response.status === 404) {
+                            errorMessage = 'File backup tidak ditemukan di server';
+                        } else if (error.response.status === 413) {
+                            errorMessage = 'File backup terlalu besar';
+                        } else if (error.response.status === 500) {
+                            errorMessage = 'Server mengalami masalah';
+                        } else if (error.response.status === 503) {
+                            errorMessage = 'Server sibuk, coba lagi nanti';
+                        }
+                    } else if (error.request) {
+                        // Request dibuat tapi tidak ada response
+                        errorMessage = 'Tidak ada respons dari server. Periksa koneksi Anda.';
+                    } else if (error.message) {
+                        errorMessage = error.message;
+                    }
+
+                    if (error.code === 'ECONNABORTED') {
+                        errorMessage = 'Timeout: Proses backup terlalu lama';
+                    }
+
+                    showAlert(errorMessage, 'danger');
+                    progressStatus.textContent = 'Gagal membuat backup';
+                    progressBar.style.backgroundColor = '#dc3545';
+
+                    // Reset UI lebih cepat jika error
+                    setTimeout(() => {
+                        resetUI();
+                    }, 3000);
+                } finally {
+                    cancelRequest = null;
+                }
             });
         });
     </script>
-
-
     @endsection
