@@ -47,8 +47,8 @@
                 <img src="{{ asset('assets/media/auth/logo-tniau.png') }}"
                     alt="Logo"
                     class="position-absolute translate-middle-y"
-                    style="top: -40px; height: 100px;" />
-                <div class="bg-body rounded-4 p-10 mt-10 frosted-glass auth-card">
+                    style="top: -40px; height: 300px;" />
+                <div class="bg-body rounded-4 p-0 pt-4 mt-10 frosted-glass auth-card" style="margin-top: 150px!important">
                     <div class="d-flex flex-column align-items-center w-100 px-lg-10">
                         <form method="POST" action="{{ route('login') }}" class="form w-100" novalidate>
                             @csrf
