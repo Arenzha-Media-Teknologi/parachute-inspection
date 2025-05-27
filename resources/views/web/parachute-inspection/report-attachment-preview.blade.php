@@ -97,6 +97,7 @@
     <div style="padding-left: 20px;">
         <h1>{{ $title }}</h1>
         <button id="generatePdfBtn">Download PDF</button>
+        <button id="generateWordBtn">Download Word</button>
         <div id="loading" style="display: none;">&nbsp;
             <span>Loading...</span>
         </div>
@@ -285,6 +286,34 @@
                 btn.disabled = false;
                 loading.style.display = 'none';
             });
+    });
+
+    document.getElementById('generateWordBtn').addEventListener('click', function() {
+        const date_start = "{{ request('date_start') }}";
+        const periode = "{{ request('periode') }}";
+        const date_end = "{{ request('date_end') ?? '' }}";
+
+        if (!date_start) return alert('Tanggal mulai harus diisi');
+        if (!periode) return alert('Periode laporan harus diisi');
+
+        // Buat form dinamis lalu submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ route('parachute-inspection.reportAttachmentWord') }}";
+        form.target = '_blank';
+
+        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        form.innerHTML = `
+        <input type="hidden" name="_token" value="${token}">
+        <input type="hidden" name="date_start" value="${date_start}">
+        <input type="hidden" name="periode" value="${periode}">
+        <input type="hidden" name="date_end" value="${date_end}">
+    `;
+
+        document.body.appendChild(form);
+        form.submit();
+        form.remove();
     });
 </script>
 

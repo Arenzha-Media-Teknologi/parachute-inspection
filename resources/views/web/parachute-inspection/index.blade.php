@@ -76,7 +76,8 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     </div>
                     <div class="col-4">
                         <div class="text-center" style="background-color: red;">
-                            <h1 class="pt-3 pb-3" style="color: yellow">Unserviceable :
+                            <h1 class="pt-3 pb-3">
+                                <a href="{{ route('parachute-inspection.reportUnserviceable') }}" target="_blank" style="color: yellow;" onmouseover="this.style.color='white'" onmouseout="this.style.color='yellow'"> Unserviceable : </a>
                                 <span style="color: white; font-size: 30px; font-weight: bold;"> @{{ totalUnserviceable }} </span>
                             </h1>
                         </div>
