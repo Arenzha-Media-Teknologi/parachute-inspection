@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ParachuteInspectionController;
 use App\Http\Controllers\web\AuthController;
+use App\Http\Controllers\web\BackupController;
 use App\Http\Controllers\web\DashboardController;
 use App\Http\Controllers\web\UserController;
 use App\Http\Controllers\web\ParachuteController;
@@ -44,8 +45,13 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', 'destroy')->name('parachute-inspection.destroy');
         Route::get('/report/preview', 'reportPreview')->name('parachute-inspection.reportPreview');
         Route::get('/report/generate-pdf', 'reportPdf')->name('parachute-inspection.reportPdf');
+        Route::post('/report/generate-word', 'reportWord')->name('parachute-inspection.reportWord');
+        Route::get('/report/generate-excel', 'reportExcel')->name('parachute-inspection.reportExcel');
+
         Route::get('/report-attachment/preview', 'reportAttachmentPreview')->name('parachute-inspection.reportAttachmentPreview');
         Route::get('/report-attachment/generate-pdf', 'reportAttachmentPdf')->name('parachute-inspection.reportAttachmentPdf');
+        Route::post('/report-attachment/generate-word', 'reportAttachmentWord')->name('parachute-inspection.reportAttachmentWord');
+        Route::get('/report/unserviceable', 'reportUnserviceable')->name('parachute-inspection.reportUnserviceable');
     });
 
     Route::controller(UserGroupController::class)->prefix('/group')->group(function () {
@@ -67,4 +73,11 @@ Route::middleware('auth')->group(function () {
         Route::patch('/{id}', 'update')->name('user.update');
         Route::delete('/{id}', 'destroy')->name('user.destroy');
     });
+    Route::controller(BackupController::class)->prefix('/backup')->group(function () {
+        Route::get('/', 'index')->name('backup.index');
+        Route::post('/backup-data', 'backupDatabase')->name('backup.database');
+    });
+
+    Route::get('/backup/download/{filename}', [BackupController::class, 'downloadBackup'])
+        ->name('backup.download');
 });

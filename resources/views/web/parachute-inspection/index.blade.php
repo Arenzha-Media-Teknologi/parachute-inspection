@@ -59,11 +59,28 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                         <span class="text-white pt-3 pb-3" style="font-size: 35px; font-weight: bold;">Daftar Pemeriksaan</span>
                     </div>
                 </div>
-                <div class="p-6 m-3 col-4">
-                    <div class="text-center" style="background-color: blue;">
-                        <h1 class="pt-3 pb-3" style="color: yellow">Total Pemeriksaan :
-                            <span style="color: orange; font-size: 30px; font-weight: bold;"> @{{ parachuteInspection.length }} </span>
-                        </h1>
+                <div class="p-6 m-3 row">
+                    <div class="col-4">
+                        <div class="text-center" style="background-color: blue;">
+                            <h1 class="pt-3 pb-3" style="color: yellow">Total Pemeriksaan :
+                                <span style="color: orange; font-size: 30px; font-weight: bold;"> @{{ parachuteInspection.length }} </span>
+                            </h1>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center" style="background-color: green;">
+                            <h1 class="pt-3 pb-3" style="color: yellow">Serviceable :
+                                <span style="color: white; font-size: 30px; font-weight: bold;"> @{{ totalServiceable }} </span>
+                            </h1>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center" style="background-color: red;">
+                            <h1 class="pt-3 pb-3">
+                                <a href="{{ route('parachute-inspection.reportUnserviceable') }}" target="_blank" style="color: yellow;" onmouseover="this.style.color='white'" onmouseout="this.style.color='yellow'"> Unserviceable : </a>
+                                <span style="color: white; font-size: 30px; font-weight: bold;"> @{{ totalUnserviceable }} </span>
+                            </h1>
+                        </div>
                     </div>
                 </div>
 
@@ -74,14 +91,6 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                                 <i class="ki-outline ki-magnifier fs-3 position-absolute top-50 start-0 translate-middle-y ms-4"></i>
                                 <input type="text" class="form-control form-control-solid ps-13 searchNumber" style="width: 220px;" placeholder="Cari Data Parasut" />
                             </div>
-
-                            <input type="date" class="form-control" v-model="date_start" style="width: 160px;" />
-                            <input type="date" class="form-control" v-model="date_end" style="width: 160px;" />
-                            <select v-model="parachuteType" class="form-select" style="width: 180px;">
-                                <option value="">-- Tipe Parasut --</option>
-                                <option v-for="item in parachute" :value="item.type">@{{ item.type }}</option>
-                            </select>
-                            <button class="btn btn-secondary" @click="applyFilter"><i class="fas fa-filter fs-4"></i>&nbsp; Filter</button>
                         </div>
 
                         <div class="d-flex align-items-center gap-2">
@@ -115,6 +124,22 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                             @endif
                         </div>
                     </div>
+                    <div class="pt-2 pb-2 pe-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="date" class="form-control" v-model="date_start" style="width: 160px;" />
+                            <input type="date" class="form-control" v-model="date_end" style="width: 160px;" />
+                            <select v-model="parachuteType" class="form-select" style="width: 180px;">
+                                <option value="">-- Tipe Parasut --</option>
+                                <option v-for="item in parachute" :value="item.type">@{{ item.type }}</option>
+                            </select>
+                            <select v-model="parachuteStatus" class="form-select" style="width: 180px;">
+                                <option value="">-- Status Perbaikan --</option>
+                                <option value="1">Serviceable</option>
+                                <option value="0">Unserviceable</option>
+                            </select>
+                            <button class="btn btn-secondary" @click="applyFilter"><i class="fas fa-filter fs-4"></i>&nbsp; Filter</button>
+                        </div>
+                    </div>
                     <div class="d-flex justify-content-end align-items-center d-none mt-3" data-kt-customer-table-toolbar="selected">
                         <div class="fw-bold me-5">
                             <span class="me-2" data-kt-customer-table-select="selected_count"></span>Selected
@@ -128,12 +153,14 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                         <thead>
                             <tr>
                                 <th class="text-center fw-bold fs-5">Tgl.Pemeriksaan</th>
-                                <th class="text-center  fw-bold fs-5">Kode Pemeriksaan</th>
-                                <th class="text-center  fw-bold fs-5">Jenis Parasut</th>
-                                <th class="text-center  fw-bold fs-5">Tipe Parasut</th>
-                                <th class="text-center  fw-bold fs-5">Part Number</th>
-                                <th class="text-center  fw-bold fs-5">Serial Number</th>
-                                <th class="text-center  fw-bold fs-5">Aksi</th>
+                                <th class="text-center fw-bold fs-5">Kode Pemeriksaan</th>
+                                <th class="text-center fw-bold fs-5">Jenis Parasut</th>
+                                <th class="text-center fw-bold fs-5">Tipe Parasut</th>
+                                <th class="text-center fw-bold fs-5">Part Number</th>
+                                <th class="text-center fw-bold fs-5">Serial Number</th>
+                                <th class="text-center fw-bold fs-5">Perbaikan</th>
+                                <th class="text-center fw-bold fs-5">User</th>
+                                <th class="text-center fw-bold fs-5">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -144,9 +171,9 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
         </div>
 
         <div class="modal fade" tabindex="-1" id="kt_modal_create">
-            <div class="modal-dialog modal-dialog-centered mw-650px modal-fullscreen-sm-down">
-                <form class="form" @submit.prevent="submitForm">
-                    <div class="modal-content">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <form class="form" @submit.prevent="submitForm">
                         <div class="modal-header" id="kt_modal_add_customer_header">
                             <h2 class="fw-bold">Tambah Data Periksa</h2>
                         </div>
@@ -199,15 +226,14 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                                 <div class="fv-row mb-7">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <h2 class="mb-0">Hasil Pemeriksaan</h2>
-                                        <a class="btn btn-primary btn-sm text-white" @click="addItems">
+                                        <a class="btn btn-primary btn-sm text-white" @click="addDetailItems">
                                             <i class="fa fa-plus"></i>
                                         </a>
                                     </div>
-                                    <table class="table table-sm table-bordered align-middle">
+                                    <!-- <table class="table table-sm table-bordered align-middle">
                                         <thead>
                                             <tr>
                                                 <th class="border-0">Upload File (2MB)</th>
-                                                <!-- <th class="border-0"></th> -->
                                                 <th class="border-0">Keterangan</th>
                                                 <th class="text-center border-0">Aksi</th>
                                             </tr>
@@ -219,16 +245,10 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                                                         <img :src="item.previewUrl" alt="Preview" style="max-width: 200px; max-height: 100px;" />
                                                     </div>
                                                 </td>
-                                                <!-- <td class="border-0">
-                                                    <div v-if="item.previewUrl" class="mt-2">
-                                                        <img :src="item.previewUrl" alt="Preview" style="max-width: 150px; max-height: 100px;" />
-                                                    </div>
-                                                </td> -->
                                                 <td class="border-0 align-top">
                                                     <textarea v-if="item.previewUrl" v-model="item.description" class="form-control form-control-sm" rows="6" required></textarea>
                                                     <textarea v-else v-model="item.description" class="form-control form-control-sm" rows="1" required></textarea>
                                                 </td>
-                                                <!-- <td class="border-0"> <input type="text" v-model="item.description" class="form-control form-control-sm" required></td> -->
                                                 <td class="border-0 align-top">
                                                     <button type="button" class="btn btn-sm btn-light" @click="removeItem(index)"><i class="fas fa-fw fa-trash"></i></button>
                                                 </td>
@@ -240,9 +260,80 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                                             </tr>
                                             <tr class="border-0" style="visibility: hidden; height: 0;">
                                                 <td class="border-0"><input type="file" class="form-control form-control-sm" style="width: 100%;"></td>
-                                                <!-- <td class="border-0"><input type="file" class="form-control form-control-sm" style="width: 100%;"></td> -->
                                                 <td class="border-0"><input type="text" class="form-control form-control-sm" style="width: 100%;"></td>
                                                 <td class="border-0"><button type="button" class="btn btn-sm btn-light"><i class="fas fa-fw fa-trash"></i></button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table> -->
+                                    <table class="table table-sm table-bordered align-middle" style="width: 100%">
+                                        <thead style="background-color: lightgray;">
+                                            <tr>
+                                                <th class="border-0" style="width: 15%">Waktu Periksa</th>
+                                                <th class="border-0" style="width: 40%">Keterangan</th>
+                                                <th class="border-0" style="width: 30%">Gambar</th>
+                                                <th class="text-center border-0" style="width: 10%">Perbaikan</th>
+                                                <th class="text-center border-0" style="width: 5%">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody v-if="detailItems.length">
+                                            <tr v-for="(detail, idx) in detailItems" :key="detail.id">
+                                                <td class="border-0 align-top" style="width: 15%">
+                                                    <input type="datetime-local" class="form-control form-control-sm" :value="formatDateForInput(detail.created)" @input="detail.created = $event.target.value" />
+                                                </td>
+                                                <td class="border-0 align-top" style="width: 40%">
+                                                    <!-- <textarea v-if="detail.file" v-model="detail.description" class="form-control form-control-sm" rows="6" required></textarea>
+                                                        <textarea v-else v-model="detail.description" class="form-control form-control-sm" rows="1" required></textarea> -->
+                                                    <div class="mb-3">
+                                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                                            <label class="form-label mb-0">Utama</label>
+                                                            <button type="button" class="btn btn-primary btn-sm text-white" @click="addMainItem(idx)"> <i class="fa fa-plus"></i>
+                                                            </button>
+                                                        </div>
+                                                        <div v-for="(m, mi) in detail.mainItems" :key="`main-${idx}-${mi}`" class="d-flex gap-2 mb-2">
+                                                            <input type="text" class="form-control form-control-sm" v-model="detail.mainItems[mi].description" />
+                                                            <button type="button" class="btn btn-sm btn-light" @click="removeMainItem(idx, mi)"> <i class="fas fa-fw fa-trash"></i> </button>
+                                                        </div>
+
+                                                        <div class="d-flex justify-content-between align-items-center mb-1 mt-3">
+                                                            <label class="form-label mb-0">Cadangan</label>
+                                                            <button type="button" class="btn btn-primary btn-sm text-white" @click="addSecondItem(idx)"> <i class="fa fa-plus"></i> </button>
+                                                        </div>
+                                                        <div v-for="(s, si) in detail.secondItems" :key="`second-${idx}-${si}`" class="d-flex gap-2 mb-2">
+                                                            <input type="text" class="form-control form-control-sm" v-model="detail.secondItems[si].description" />
+                                                            <button type="button" class="btn btn-sm btn-light" @click="removeSecondItem(idx, si)"> <i class="fas fa-fw fa-trash"></i> </button>
+                                                        </div>
+                                                    </div>
+
+                                                </td>
+                                                <td class="border-0" style="width: 30%"> <input type="file" accept="image/*" class="form-control form-control-sm" v-on:change="handleFileUploadDetail($event, idx)">
+                                                    <div v-if="detail.file || detail.previewUrl" class="mt-2">
+                                                        <img v-if="detail.previewUrl" :src="detail.previewUrl" alt="Preview" style="max-width: 200px; max-height: 100px;" />
+                                                        <img v-else :src="`/storage/${detail.file}`" alt="Preview" style="max-width: 200px; max-height: 100px;" />
+                                                    </div>
+                                                </td>
+                                                <td class="border-0 align-top text-center" style="width: 10%">
+                                                    <input type="checkbox" class="form-check-input custom-checkbox" v-model="detail.status" />
+                                                    <div v-if="detail.status">
+                                                        <p>
+                                                            <label for="status_date"><b>Waktu Selesai : </b></label>
+                                                            <input type="datetime-local" class="form-control form-control-sm" :value="formatDateStatusInput(detail.status_date)" @input="detail.status_date = $event.target.value" />
+                                                        </p>
+                                                    </div>
+                                                </td>
+                                                <td class="border-0 align-top" style="width: 5%">
+                                                    <button type="button" class="btn btn-sm btn-light" @click="removeDetailItem(idx)"><i class="fas fa-fw fa-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tbody v-else>
+                                            <tr>
+                                                <td colspan="3" class="border-0 text-center text-muted">Belum ada item pemeriksaan.</td>
+                                            </tr>
+                                            <tr class="border-0" style="visibility: hidden; height: 0;">
+                                                <td class="border-0" style="width: 20%"><input type="datetime" class="form-control form-control-sm" style="width: 100%;"></td>
+                                                <td class="border-0" style="width: 40%"><input type="text" class="form-control form-control-sm" style="width: 100%;"></td>
+                                                <td class="border-0" style="width: 35%"><input type="file" class="form-control form-control-sm" style="width: 100%;"></td>
+                                                <td class="border-0" style="width: 5%"><button type="button" class="btn btn-sm btn-light"><i class="fas fa-fw fa-trash"></i></button></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -257,8 +348,8 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                                     <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                             </button>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -519,9 +610,24 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
             date_start: '',
             date_end: '',
             parachuteType: '',
+            parachuteStatus: '',
             reportDate: '',
             loading: false,
         },
+        computed: {
+            totalServiceable() {
+                return this.parachuteInspection.filter(pi => {
+                    return (pi.items || []).some(item =>
+                        (item.status === 1 || item.status === '1') &&
+                        item.status_date
+                    );
+                }).length;
+            },
+            totalUnserviceable() {
+                return this.parachuteInspection.length - this.totalServiceable;
+            }
+        },
+
         methods: {
             applyFilter() {
                 const today = new Date().toISOString().split('T')[0];
@@ -582,6 +688,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 let url = `${window.parachuteReportPreviewUrl}?date_start=${this.date_start}&periode=${this.reportDate}`;
                 if (this.date_end) url += `&date_end=${this.date_end}`;
                 if (this.parachuteType) url += `&type=${encodeURIComponent(this.parachuteType)}`;
+                if (this.parachuteStatus) url += `&status=${encodeURIComponent(this.parachuteStatus)}`;
                 window.open(url, '_blank');
             },
             submitReportAttachment() {
@@ -603,6 +710,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 let url = `${window.parachuteReportAttachmentPreviewUrl}?date_start=${this.date_start}&periode=${this.reportDate}`;
                 if (this.date_end) url += `&date_end=${this.date_end}`;
                 if (this.parachuteType) url += `&type=${encodeURIComponent(this.parachuteType)}`;
+                if (this.parachuteStatus) url += `&status=${encodeURIComponent(this.parachuteStatus)}`;
                 window.open(url, '_blank');
             },
 
@@ -777,17 +885,57 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 let vm = this;
                 vm.loading = true;
                 let formData = new FormData();
-                formData.append('code', this.code);
-                formData.append('date', this.date);
-                formData.append('activity', this.activity);
-                formData.append('checker', this.checker);
-                formData.append('parachute_id', this.parachuteSelect);
-                this.parachuteItems.forEach((item, index) => {
-                    if (item.file) {
-                        formData.append(`items[${index}][file]`, item.file);
-                        formData.append(`items[${index}][description]`, item.description);
+                formData.append('code', vm.code);
+                formData.append('date', vm.date);
+                formData.append('activity', vm.activity);
+                formData.append('checker', vm.checker);
+                formData.append('parachute_id', vm.parachuteSelect);
+
+                let idx = 0;
+                vm.detailItems.forEach((detail, detailIdx) => {
+                    const detailTempId = detail.id || `temp-${detailIdx}`; // gunakan ID sementara kalau belum ada ID dari DB
+
+                    // Data utama item
+                    formData.append(`items[${idx}][id]`, detail.id || '');
+                    if (detail.created && detail.created !== '0' && detail.created !== 'null') {
+                        formData.append(`items[${idx}][created]`, formatDate(detail.created));
+                    }
+                    formData.append(`items[${idx}][description]`, detail.description || '');
+                    formData.append(`items[${idx}][status]`, detail.status ? 1 : 0);
+                    if (detail.status_date && detail.status_date !== '0' && detail.status_date !== 'null') {
+                        formData.append(`items[${idx}][status_date]`, formatDate(detail.status_date));
+                    }
+                    if (detail.file instanceof File) {
+                        formData.append(`items[${idx}][file]`, detail.file);
+                    }
+                    // Tandai ID sementara (untuk backend tracking)
+                    formData.append(`items[${idx}][temp_id]`, detailTempId);
+                    idx++;
+
+                    // Main Items
+                    if (detail.mainItems && detail.mainItems.length) {
+                        detail.mainItems.forEach(m => {
+                            formData.append(`items[${idx}][parent_temp_id]`, detailTempId);
+                            formData.append(`items[${idx}][type]`, 'utama');
+                            formData.append(`items[${idx}][description]`, m.description);
+                            idx++;
+                        });
+                    }
+                    // Second Items
+                    if (detail.secondItems && detail.secondItems.length) {
+                        detail.secondItems.forEach(s => {
+                            formData.append(`items[${idx}][parent_temp_id]`, detailTempId);
+                            formData.append(`items[${idx}][type]`, 'cadangan');
+                            formData.append(`items[${idx}][description]`, s.description);
+                            idx++;
+                        });
                     }
                 });
+                // Debug log
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
+                // Submit
                 axios.post('/parachute-inspection', formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
@@ -795,11 +943,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     })
                     .then(function(response) {
                         vm.loading = false;
-                        let message = response?.data?.message;
-                        if (!message) {
-                            message = 'Data berhasil disimpan'
-                        }
-                        const data = response?.data?.data;
+                        let message = response?.data?.message || 'Data berhasil disimpan';
                         toastr.success(message);
                         setTimeout(function() {
                             window.location.href = '/parachute-inspection';
@@ -808,13 +952,11 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     .catch(function(error) {
                         vm.loading = false;
                         console.log(error);
-                        let message = error?.response?.data?.message;
-                        if (!message) {
-                            message = 'Terdapat kesalahan..'
-                        }
+                        let message = error?.response?.data?.message || 'Terdapat kesalahan..';
                         toastr.error(message);
                     });
             },
+
 
             onSelcected: function(id) {
                 this.parachuteDetail = this.parachuteInspection.filter((item) => {
@@ -833,28 +975,62 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 }
                 console.log('parachuteDetail.items :', this.parachuteDetail.items);
             },
+            addMainItem(idx) {
+                this.detailItems[idx].mainItems.push({
+                    type: 'utama',
+                    description: ''
+                });
+            },
+            removeMainItem(idx, mi) {
+                this.detailItems[idx].mainItems.splice(mi, 1);
+            },
+
+            addSecondItem(idx) {
+                this.detailItems[idx].secondItems.push({
+                    type: 'cadangan',
+                    description: ''
+                });
+            },
+            removeSecondItem(idx, si) {
+                this.detailItems[idx].secondItems.splice(si, 1);
+            },
+
+
             formatDateForInput(dateString) {
                 if (!dateString) return '';
                 const date = new Date(dateString);
                 const pad = (n) => n.toString().padStart(2, '0');
                 return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
             },
+            formatDateStatusInput(dateString) {
+                if (!dateString) return '';
+                if (dateString instanceof Date) {
+                    const date = dateString;
+                    const pad = (n) => n.toString().padStart(2, '0');
+                    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                }
+                if (typeof dateString === 'string') {
+                    const iso = dateString.replace(' ', 'T');
+                    const date = new Date(iso);
+                    if (isNaN(date.getTime())) return '';
+                    const pad = (n) => n.toString().padStart(2, '0');
+                    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                }
+                return '';
+            },
             addDetailItems: function() {
                 this.detailItems.push({
+                    "id": null,
                     "created": "",
                     "description": "",
                     "file": "",
                     "previewUrl": null,
+                    mainItems: [],
+                    secondItems: [],
                 });
             },
             removeDetailItem: function(index) {
-                // this.detailItems.splice(index, 1);
-                this.detailItems.splice(index, 1, {
-                    ...this.detailItems[index],
-                    file: file,
-                    previewUrl: e.target.result
-                });
-
+                this.detailItems.splice(index, 1);
             },
             handleFileUploadDetail(event, index) {
                 console.log(event);
@@ -881,22 +1057,20 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     return;
                 }
                 const reader = new FileReader();
-
-                if (!this.detailItems[index]) {
-                    console.error(`detailItems[${index}] tidak ditemukan!`);
-                    // return;
-                    this.$set(this.detailItems, index, {
-                        created: '',
-                        description: '',
-                        file: '',
-                        previewUrl: ''
-                    });
-                }
                 if (this.detailItems[index]) {
                     this.detailItems[index].file = file;
                     reader.onload = (e) => {
                         this.detailItems[index].previewUrl = e.target.result;
                     };
+                } else {
+                    this.$set(this.detailItems, index, {
+                        id: null,
+                        created: '',
+                        description: '',
+                        file: file,
+                        previewUrl: ''
+                    });
+                    console.error(`detailItems[${index}] tidak ditemukan!`);
                 }
                 reader.readAsDataURL(file);
             },
@@ -990,6 +1164,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     d.date_start = app.date_start;
                     d.date_end = app.date_end;
                     d.type = app.parachuteType;
+                    d.status = app.parachuteStatus;
                 }
             },
             columns: [
@@ -1033,6 +1208,20 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 {
                     data: 'serial_number',
                     name: 'serial_number',
+                    render: function(data, type) {
+                        return `<div class="text-center font-weight-bolder">${data}</div>`;
+                    }
+                },
+                {
+                    data: 'status',
+                    name: 'status',
+                    render: function(data, type) {
+                        return `<div class="text-center font-weight-bolder">${data}</div>`;
+                    }
+                },
+                {
+                    data: 'user',
+                    name: 'user',
                     render: function(data, type) {
                         return `<div class="text-center font-weight-bolder">${data}</div>`;
                     }
@@ -1123,4 +1312,13 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
         });
     })
 </script>
+
+<script>
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        return d.toISOString().slice(0, 19).replace('T', ' ');
+    }
+</script>
+
 @endsection

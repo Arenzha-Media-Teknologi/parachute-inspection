@@ -94,6 +94,8 @@
     <div style="padding-left: 20px;">
         <h1>{{ $title }}</h1>
         <button id="generatePdfBtn">Download PDF</button>
+        <button id="generateWordBtn">Download Word</button>
+        <button id="generateExcelBtn">Download Excel</button>
         <div id="loading" style="display: none;">&nbsp;
             <span>Loading...</span>
         </div>
@@ -145,6 +147,11 @@
                         <td>Tipe Parasut : <strong> {{ $type }} </strong> </td>
                     </tr>
                     @endif
+                    @if($status)
+                    <tr>
+                        <td>Status : <strong> {{ $status }} </strong> </td>
+                    </tr>
+                    @endif
                 </table>
             </div>
             <table class="inspection-table">
@@ -178,7 +185,31 @@
                         <!-- <td style="text-align: left;">{{ $item->description }}</td> -->
                         <td style="text-align: left;">
                             @foreach($item->items as $subitem)
-                            - {{ $subitem->description }}<br>
+
+                            @php
+                            $utamaDescs = $subitem->itemDescriptions->where('type', 'utama');
+                            @endphp
+                            @if($utamaDescs->isNotEmpty())
+                            <div><strong>Utama:</strong></div>
+                            <ul style="margin-top: 0; padding-left: 20px;">
+                                @foreach($utamaDescs as $desc)
+                                <li>{{ $desc->description }}</li>
+                                @endforeach
+                            </ul>
+                            @endif
+
+                            @php
+                            $cadanganDescs = $subitem->itemDescriptions->where('type', 'cadangan');
+                            @endphp
+                            @if($cadanganDescs->isNotEmpty())
+                            <div><strong>Cadangan:</strong></div>
+                            <ul style="margin-top: 0; padding-left: 20px;">
+                                @foreach($cadanganDescs as $desc)
+                                <li>{{ $desc->description }}</li>
+                                @endforeach
+                            </ul>
+                            @endif
+
                             @endforeach
                         </td>
                     </tr>
@@ -200,6 +231,8 @@
         let date_start = "{{ request('date_start') }}";
         let periode = "{{ request('periode') }}";
         let date_end = "{{ request('date_end') ?? '' }}";
+        let type = "{{ request('type') ?? '' }}";
+        let status = "{{ request('status') ?? '' }}";
 
         if (!date_start) {
             alert('Tanggal mulai harus diisi');
@@ -209,13 +242,18 @@
             alert('Periode laporan harus diisi');
             return;
         }
-
         btn.disabled = true;
         loading.style.display = 'inline';
 
         let url = "{{ route('parachute-inspection.reportPdf') }}" + "?date_start=" + encodeURIComponent(date_start) + "&periode=" + encodeURIComponent(periode);
         if (date_end) {
             url += "&date_end=" + encodeURIComponent(date_end);
+        }
+        if (type) {
+            url += "&type=" + encodeURIComponent(type);
+        }
+        if (status) {
+            url += "&status=" + encodeURIComponent(status);
         }
 
         fetch(url)
@@ -245,6 +283,130 @@
             .finally(() => {
                 btn.disabled = false;
                 loading.style.display = 'none';
+            });
+    });
+
+    document.getElementById('generateWordBtn').addEventListener('click', function() {
+        const btn = this;
+        const loading = document.getElementById('loading');
+
+        let date_start = "{{ request('date_start') }}";
+        let periode = "{{ request('periode') }}";
+        let date_end = "{{ request('date_end') ?? '' }}";
+        let type = "{{ request('type') ?? '' }}";
+        let status = "{{ request('status') ?? '' }}";
+
+        if (!date_start) {
+            alert('Tanggal mulai harus diisi');
+            return;
+        }
+        if (!periode) {
+            alert('Periode laporan harus diisi');
+            return;
+        }
+        btn.disabled = true;
+        loading.style.display = 'inline';
+
+        let url = "{{ route('parachute-inspection.reportWord') }}" + "?date_start=" + encodeURIComponent(date_start) + "&periode=" + encodeURIComponent(periode);
+        if (date_end) {
+            url += "&date_end=" + encodeURIComponent(date_end);
+        }
+        if (type) {
+            url += "&type=" + encodeURIComponent(type);
+        }
+        if (status) {
+            url += "&status=" + encodeURIComponent(status);
+        }
+        fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    date_start: date_start,
+                    periode: periode,
+                    date_end: date_end
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.url) {
+                    fetch(data.url)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const blobUrl = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = blobUrl;
+                            a.download = "laporan_inspeksi_parasut.docx";
+                            document.body.appendChild(a);
+                            a.click();
+                            a.remove();
+                            window.URL.revokeObjectURL(blobUrl);
+                        });
+                } else {
+                    alert('Gagal membuat Word.');
+                }
+            })
+            .catch(() => {
+                alert('Terjadi kesalahan saat membuat Word.');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                loading.style.display = 'none';
+            });
+    });
+
+    document.getElementById('generateExcelBtn').addEventListener('click', function() {
+        const btn = this;
+        const loading = document.getElementById('loading'); // kalau ada indikator loading
+        let date_start = "{{ request('date_start') }}";
+        let periode = "{{ request('periode') }}";
+        let date_end = "{{ request('date_end') ?? '' }}";
+        let type = "{{ request('type') ?? '' }}";
+        let status = "{{ request('status') ?? '' }}";
+
+        if (!date_start) {
+            alert('Tanggal mulai harus diisi');
+            return;
+        }
+        if (!periode) {
+            alert('Periode laporan harus diisi');
+            return;
+        }
+        btn.disabled = true;
+        if (loading) loading.style.display = 'inline';
+
+        let url = "{{ route('parachute-inspection.reportExcel') }}" + "?date_start=" + encodeURIComponent(date_start) + "&periode=" + encodeURIComponent(periode);
+        if (date_end) {
+            url += "&date_end=" + encodeURIComponent(date_end);
+        }
+        if (type) {
+            url += "&type=" + encodeURIComponent(type);
+        }
+        if (status) {
+            url += "&status=" + encodeURIComponent(status);
+        }
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error('Gagal download Excel');
+                return response.blob();
+            })
+            .then(blob => {
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = "laporan_inspeksi_parasut.xlsx";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(blobUrl);
+            })
+            .catch(() => alert('Terjadi kesalahan saat membuat Excel'))
+            .finally(() => {
+                btn.disabled = false;
+                if (loading) loading.style.display = 'none';
             });
     });
 </script>

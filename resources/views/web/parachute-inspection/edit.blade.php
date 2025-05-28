@@ -7,6 +7,19 @@
 
 
 @section('content')
+<style scoped>
+    .custom-checkbox {
+        width: 50px;
+        height: 35px;
+        cursor: pointer;
+        accent-color: green;
+    }
+
+    .custom-checkbox:checked {
+        background-color: green;
+        border-color: green;
+    }
+</style>
 
 @php
 $user = auth()->user();
@@ -109,29 +122,60 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                                         <table class="table table-sm table-bordered align-middle" style="width: 100%">
                                             <thead style="background-color: lightgray;">
                                                 <tr>
-                                                    <th class="border-0" style="width: 20%">Waktu Periksa</th>
+                                                    <th class="border-0" style="width: 15%">Waktu Periksa</th>
                                                     <th class="border-0" style="width: 40%">Keterangan</th>
-                                                    <th class="border-0" style="width: 35%">Gambar</th>
+                                                    <th class="border-0" style="width: 30%">Gambar</th>
+                                                    <th class="text-center border-0" style="width: 10%">Perbaikan</th>
                                                     <th class="text-center border-0" style="width: 5%">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody v-if="detailItems.length">
-                                                <tr v-for="(item,index) in detailItems">
-                                                    <td class="border-0 align-top" style="width: 20%">
-                                                        <input type="datetime-local" class="form-control form-control-sm" :value="formatDateForInput(item.created)" @input="item.created = $event.target.value" />
+                                                <tr v-for="(detail, idx) in detailItems" :key="detail.id">
+                                                    <td class="border-0 align-top" style="width: 15%">
+                                                        <input type="datetime-local" class="form-control form-control-sm" :value="formatDateForInput(detail.created)" @input="detail.created = $event.target.value" />
                                                     </td>
                                                     <td class="border-0 align-top" style="width: 40%">
-                                                        <textarea v-if="item.file" v-model="item.description" class="form-control form-control-sm" rows="6" required></textarea>
-                                                        <textarea v-else v-model="item.description" class="form-control form-control-sm" rows="1" required></textarea>
+                                                        <!-- <textarea v-if="detail.file" v-model="detail.description" class="form-control form-control-sm" rows="6" required></textarea>
+                                                        <textarea v-else v-model="detail.description" class="form-control form-control-sm" rows="1" required></textarea> -->
+                                                        <div class="mb-3">
+                                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                                <label class="form-label mb-0">Utama</label>
+                                                                <button type="button" class="btn btn-primary btn-sm text-white" @click="addMainItem(idx)"> <i class="fa fa-plus"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div v-for="(m, mi) in detail.mainItems" :key="`main-${idx}-${mi}`" class="d-flex gap-2 mb-2">
+                                                                <input type="text" class="form-control form-control-sm" v-model="detail.mainItems[mi].description" />
+                                                                <button type="button" class="btn btn-sm btn-light" @click="removeMainItem(idx, mi)"> <i class="fas fa-fw fa-trash"></i> </button>
+                                                            </div>
+
+                                                            <div class="d-flex justify-content-between align-items-center mb-1 mt-3">
+                                                                <label class="form-label mb-0">Cadangan</label>
+                                                                <button type="button" class="btn btn-primary btn-sm text-white" @click="addSecondItem(idx)"> <i class="fa fa-plus"></i> </button>
+                                                            </div>
+                                                            <div v-for="(s, si) in detail.secondItems" :key="`second-${idx}-${si}`" class="d-flex gap-2 mb-2">
+                                                                <input type="text" class="form-control form-control-sm" v-model="detail.secondItems[si].description" />
+                                                                <button type="button" class="btn btn-sm btn-light" @click="removeSecondItem(idx, si)"> <i class="fas fa-fw fa-trash"></i> </button>
+                                                            </div>
+                                                        </div>
+
                                                     </td>
-                                                    <td class="border-0" style="width: 35%"> <input type="file" accept="image/*" class="form-control form-control-sm" v-on:change="handleFileUploadDetail($event, index)">
-                                                        <div v-if="item.file || item.previewUrl" class="mt-2">
-                                                            <img v-if="item.previewUrl" :src="item.previewUrl" alt="Preview" style="max-width: 200px; max-height: 100px;" />
-                                                            <img v-else :src="`/storage/${item.file}`" alt="Preview" style="max-width: 200px; max-height: 100px;" />
+                                                    <td class="border-0" style="width: 30%"> <input type="file" accept="image/*" class="form-control form-control-sm" v-on:change="handleFileUploadDetail($event, idx)">
+                                                        <div v-if="detail.file || detail.previewUrl" class="mt-2">
+                                                            <img v-if="detail.previewUrl" :src="detail.previewUrl" alt="Preview" style="max-width: 200px; max-height: 100px;" />
+                                                            <img v-else :src="`/storage/${detail.file}`" alt="Preview" style="max-width: 200px; max-height: 100px;" />
+                                                        </div>
+                                                    </td>
+                                                    <td class="border-0 align-top text-center" style="width: 10%">
+                                                        <input type="checkbox" class="form-check-input custom-checkbox" v-model="detail.status" />
+                                                        <div v-if="detail.status">
+                                                            <p>
+                                                                <label for="status_date"><b>Waktu Selesai : </b></label>
+                                                                <input type="datetime-local" class="form-control form-control-sm" :value="formatDateStatusInput(detail.status_date)" @input="detail.status_date = $event.target.value" />
+                                                            </p>
                                                         </div>
                                                     </td>
                                                     <td class="border-0 align-top" style="width: 5%">
-                                                        <button type="button" class="btn btn-sm btn-light" @click="removeDetailItem(index)"><i class="fas fa-fw fa-trash"></i></button>
+                                                        <button type="button" class="btn btn-sm btn-light" @click="removeDetailItem(idx)"><i class="fas fa-fw fa-trash"></i></button>
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -226,6 +270,9 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
             parachuteItems: [],
             detailItems: [],
 
+            mainItems: [],
+            secondItems: [],
+
             loading: false,
         },
         mounted() {
@@ -233,24 +280,82 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
             console.log('parachuteDetail:', this.parachuteDetail);
             if (this.parachuteDetail.items.length > 0) {
                 this.parachuteDetail.items.forEach(item => {
-                    this.detailItems.push({
+                    const detailItem = {
                         id: item.id || null,
                         created: item.created_at || "",
                         description: item.description || "",
                         file: item.image_url || "",
                         previewUrl: null,
-                    });
+                        status: item.status === 1 || item.status === '1',
+                        status_date: item.status_date || "",
+                        mainItems: [],
+                        secondItems: [],
+                    };
+
+                    if (Array.isArray(item.item_descriptions)) {
+                        item.item_descriptions.forEach(desc => {
+                            const entry = {
+                                id: desc.id || null,
+                                type: desc.type || '',
+                                description: desc.description || ''
+                            };
+                            if (entry.type === 'utama') {
+                                detailItem.mainItems.push(entry);
+                            } else if (entry.type === 'cadangan') {
+                                detailItem.secondItems.push(entry);
+                            }
+                        });
+                    }
+                    this.detailItems.push(detailItem);
                 });
             }
             console.log('parachuteDetail.items :', this.parachuteDetail.items);
         },
         methods: {
+            addMainItem(idx) {
+                this.detailItems[idx].mainItems.push({
+                    type: 'utama',
+                    description: ''
+                });
+            },
+            removeMainItem(idx, mi) {
+                this.detailItems[idx].mainItems.splice(mi, 1);
+            },
+
+            addSecondItem(idx) {
+                this.detailItems[idx].secondItems.push({
+                    type: 'cadangan',
+                    description: ''
+                });
+            },
+            removeSecondItem(idx, si) {
+                this.detailItems[idx].secondItems.splice(si, 1);
+            },
+
+
             formatDateForInput(dateString) {
                 if (!dateString) return '';
                 const date = new Date(dateString);
                 const pad = (n) => n.toString().padStart(2, '0');
                 return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
             },
+            formatDateStatusInput(dateString) {
+                if (!dateString) return '';
+                if (dateString instanceof Date) {
+                    const date = dateString;
+                    const pad = (n) => n.toString().padStart(2, '0');
+                    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                }
+                if (typeof dateString === 'string') {
+                    const iso = dateString.replace(' ', 'T');
+                    const date = new Date(iso);
+                    if (isNaN(date.getTime())) return '';
+                    const pad = (n) => n.toString().padStart(2, '0');
+                    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                }
+                return '';
+            },
+
             addDetailItems: function() {
                 this.detailItems.push({
                     "id": null,
@@ -258,6 +363,8 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                     "description": "",
                     "file": "",
                     "previewUrl": null,
+                    mainItems: [],
+                    secondItems: [],
                 });
             },
             removeDetailItem: function(index) {
@@ -335,38 +442,51 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
             sendDataDetail: function(id) {
                 let vm = this;
                 vm.loading = true;
+                console.log('sendDataDetail:', id);
                 let formData = new FormData();
                 formData.append('code', this.parachuteDetail['number']);
                 formData.append('date', this.parachuteDetail['date']);
                 formData.append('activity', this.parachuteDetail['activity_name']);
                 formData.append('checker', this.parachuteDetail['person_in_charge']);
                 formData.append('parachute_id', this.parachuteDetail['parachute_id']);
-                // this.parachuteItems.forEach((item, index) => {
-                //     if (item.id) {
-                //         formData.append(`items[${index}][id]`, item.id);
-                //     }
-                //     if (item.file) {
-                //         formData.append(`items[${index}][created]`, item.created);
-                //         formData.append(`items[${index}][description]`, item.description);
-                //         formData.append(`items[${index}][file]`, item.file);
-                //     }
-                // });            
-                console.log('sendDataDetail:', id);
-                this.parachuteItems = this.detailItems;
-                this.parachuteItems.forEach((item, index) => {
-                    if (item.id) {
-                        formData.append(`items[${index}][id]`, item.id);
+                let idx = 0;
+                this.detailItems.forEach(detail => {
+                    formData.append(`items[${idx}][id]`, detail.id || '');
+                    if (detail.created && detail.created !== '0' && detail.created !== 'null') {
+                        formData.append(`items[${idx}][created]`, detail.created);
                     }
-                    formData.append(`items[${index}][created]`, item.created || '');
-                    formData.append(`items[${index}][description]`, item.description || '');
-                    if (item.file instanceof File) {
-                        formData.append(`items[${index}][file]`, item.file);
+                    formData.append(`items[${idx}][description]`, detail.description || '');
+                    formData.append(`items[${idx}][status]`, detail.status ? 1 : 0);
+                    if (detail.status_date && detail.status_date !== '0' && detail.status_date !== 'null') {
+                        formData.append(`items[${idx}][status_date]`, detail.status_date);
                     }
+                    if (detail.file instanceof File) {
+                        formData.append(`items[${idx}][file]`, detail.file);
+                    }
+                    idx++;
+                });
+
+                this.detailItems.forEach(detail => {
+                    detail.mainItems.forEach(m => {
+                        formData.append(`items[${idx}][parent_item_id]`, detail.id);
+                        formData.append(`items[${idx}][type]`, 'utama');
+                        formData.append(`items[${idx}][description]`, m.description);
+                        idx++;
+                    });
+                });
+                this.detailItems.forEach(detail => {
+                    detail.secondItems.forEach(s => {
+                        formData.append(`items[${idx}][parent_item_id]`, detail.id);
+                        formData.append(`items[${idx}][type]`, 'cadangan');
+                        formData.append(`items[${idx}][description]`, s.description);
+                        idx++;
+                    });
                 });
 
                 for (let pair of formData.entries()) {
                     console.log(pair[0] + ': ' + pair[1]);
                 }
+                // vm.loading = false;
                 // return;
                 axios.post('/parachute-inspection/' + id, formData, {
                         headers: {

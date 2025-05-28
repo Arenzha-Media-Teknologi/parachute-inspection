@@ -133,7 +133,12 @@
                     </tr>
                     @if($type)
                     <tr>
-                        <td>Tipe Parasut : <strong> {{ $type }} </strong> </td>
+                        <td>Tipe Parasut : <strong> {{ $type }} </strong></td>
+                    </tr>
+                    @endif
+                    @if($status)
+                    <tr>
+                        <td>Status : <strong> {{ $status }} </strong> </td>
                     </tr>
                     @endif
                 </table>
@@ -169,7 +174,31 @@
                         <!-- <td style="text-align: left;">{{ $item->description }}</td> -->
                         <td style="text-align: left;">
                             @foreach($item->items as $subitem)
-                            - {{ $subitem->description }}<br>
+
+                            @php
+                            $utamaDescs = $subitem->itemDescriptions->where('type', 'utama');
+                            @endphp
+                            @if($utamaDescs->isNotEmpty())
+                            <div><strong>Utama:</strong></div>
+                            <ul style="margin-top: 0; padding-left: 20px;">
+                                @foreach($utamaDescs as $desc)
+                                <li>{{ $desc->description }}</li>
+                                @endforeach
+                            </ul>
+                            @endif
+
+                            @php
+                            $cadanganDescs = $subitem->itemDescriptions->where('type', 'cadangan');
+                            @endphp
+                            @if($cadanganDescs->isNotEmpty())
+                            <div><strong>Cadangan:</strong></div>
+                            <ul style="margin-top: 0; padding-left: 20px;">
+                                @foreach($cadanganDescs as $desc)
+                                <li>{{ $desc->description }}</li>
+                                @endforeach
+                            </ul>
+                            @endif
+
                             @endforeach
                         </td>
                     </tr>
@@ -179,6 +208,25 @@
                     </tr>
                     @endforelse
                 </tbody>
+            </table>
+            <!-- Kolom Tanda Tangan -->
+            <table class="signature-table" style="width: 100%; margin-top: 50px;">
+                <tr>
+                    <td style="width: 50%;">
+                        <p>Mengetahui,</p>
+                        <p>Dansathar 72</p>
+                        <br><br><br><br>
+                        <p style="text-decoration: underline; font-weight: bold;">[NAMA PEJABAT]</p>
+                        <p>[Pangkat, NRP]</p>
+                    </td>
+                    <td style="width: 50%;">
+                        <p>Yang Membuat,</p>
+                        <p>Petugas Pemeriksa</p>
+                        <br><br><br><br>
+                        <p style="text-decoration: underline; font-weight: bold;">[NAMA PETUGAS]</p>
+                        <p>[Pangkat, NRP]</p>
+                    </td>
+                </tr>
             </table>
         </div>
     </div>
