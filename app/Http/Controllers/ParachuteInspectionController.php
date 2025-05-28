@@ -133,40 +133,78 @@ class ParachuteInspectionController extends Controller
 
     public function store(Request $request)
     {
-        // $user_id = Auth::user()->id;
+        $user_id = Auth::id();
         $validated = $request->validate([
             'code' => 'required|unique:parachute_inspections,number',
             'date' => 'required|date',
             'activity' => 'nullable|string|max:255',
             'checker' => 'nullable|string|max:255',
             'parachute_id' => 'required|exists:parachutes,id',
+            'items' => 'nullable|array',
+            'items.*.status_date' => 'nullable|date',
+            'items.*.created' => 'nullable|date',
         ]);
-        // return $request->all();
+
         try {
             DB::beginTransaction();
+
             $inspection = ParachuteInspection::create([
                 'number' => $validated['code'],
                 'date' => $validated['date'],
                 'activity_name' => $validated['activity'],
                 'person_in_charge' => $validated['checker'],
                 'parachute_id' => $validated['parachute_id'],
-                // 'created_by' => $user_id,
+                'created_by' => $user_id,
             ]);
-            if ($request->has('items')) {
-                foreach ($request->items as $index => $item) {
-                    if (isset($item['file']) && $item['file']) {
-                        $file = $request->file("items.$index.file");
-                        $filePath = $file->store('parachute-files', 'public');
-                        $inspection->items()->create([
-                            'description' => $item['description'] ?? null,
-                            'image_url' => $filePath,
-                            'image_file_name' => $file->getClientOriginalName(),
-                            'image_file_size' => $file->getSize(),
+
+            // Temp ID → Model mapping
+            $tempItemMap = [];
+
+            foreach ($request->items as $idx => $item) {
+                // Jika item utama (bukan child)
+                if (empty($item['parent_temp_id']) && isset($item['created'])) {
+                    $data = [
+                        'description' => $item['description'] ?? null,
+                        'status' => ($item['status'] === true || $item['status'] === '1' || $item['status'] === 1 || $item['status'] === 'true') ? '1' : '0',
+                        'created_at' => Carbon::parse($item['created'])->format('Y-m-d H:i:s'),
+                    ];
+
+                    if (!empty($item['status_date'])) {
+                        $data['status_date'] = Carbon::parse($item['status_date'])->format('Y-m-d H:i:s');
+                    }
+
+                    if ($request->hasFile("items.$idx.file")) {
+                        $f = $request->file("items.$idx.file");
+                        $path = $f->store('parachute-files', 'public');
+                        $data['image_url'] = $path;
+                        $data['image_file_name'] = $f->getClientOriginalName();
+                        $data['image_file_size'] = $f->getSize();
+                    }
+
+                    $model = $inspection->items()->create($data);
+
+                    // Simpan ke map jika ada temp_id
+                    if (!empty($item['temp_id'])) {
+                        $tempItemMap[$item['temp_id']] = $model;
+                    }
+
+                    continue;
+                }
+
+                // Jika item deskripsi anak (utama/cadangan)
+                if (!empty($item['description']) && !empty($item['parent_temp_id'])) {
+                    $parentTempId = $item['parent_temp_id'];
+                    if (isset($tempItemMap[$parentTempId])) {
+                        $tempItemMap[$parentTempId]->itemDescriptions()->create([
+                            'type' => $item['type'] ?? null,
+                            'description' => $item['description'],
                         ]);
                     }
                 }
             }
+
             DB::commit();
+
             return response()->json([
                 'message' => 'Data berhasil disimpan',
                 'data' => $inspection
@@ -179,6 +217,7 @@ class ParachuteInspectionController extends Controller
             ], 500);
         }
     }
+
 
     public function destroy(string $id)
     {
@@ -529,6 +568,7 @@ class ParachuteInspectionController extends Controller
             // 'tahun' => 'required|string',
             'date_end' => 'nullable|date',
             'type' => 'nullable|string',
+            'status' => 'nullable|string',
         ]);
         // $query = ParachuteInspection::with('parachute')->orderBy('id', 'desc');
         $query = ParachuteInspection::with(['parachute', 'items.itemDescriptions'])->orderBy('id', 'desc');
@@ -557,16 +597,22 @@ class ParachuteInspectionController extends Controller
         if ($request->filled('status')) {
             $query->whereHas('items', function ($q) use ($request) {
                 if ($request->status === '1') {
-                    // Serviceable
+                    // $status = 'Serviceable';
                     $q->where('status', '1');
                 } elseif ($request->status === '0') {
-                    // Unserviceable
+                    // $status = 'Unserviceable';
                     $q->where(function ($sub) {
                         $sub->where('status', '!=', '1')
                             ->orWhereNull('status');
                     });
                 }
             });
+        }
+
+        if ($request->status === '1') {
+            $status = 'Serviceable';
+        } elseif ($request->status === '0') {
+            $status = 'Unserviceable';
         }
         $results  = $query->get();
         $data = [
@@ -579,6 +625,7 @@ class ParachuteInspectionController extends Controller
             // 'tahun' => $request->tahun,
             'date_end' => $request->date_end,
             'type' => $request->type,
+            'status' => $status ?? '',
         ];
 
         return view('web.parachute-inspection.report-preview', $data);
@@ -593,6 +640,7 @@ class ParachuteInspectionController extends Controller
             // 'tahun' => 'required|string',
             'date_end' => 'nullable|date',
             'type' => 'nullable|string',
+            'status' => 'nullable|string',
         ]);
 
         $query = ParachuteInspection::with(['parachute', 'items.itemDescriptions'])->orderBy('id', 'desc');
@@ -634,6 +682,11 @@ class ParachuteInspectionController extends Controller
         }
         $data = $query->get();
 
+        if ($request->status === '1') {
+            $status = 'Serviceable';
+        } elseif ($request->status === '0') {
+            $status = 'Unserviceable';
+        }
         $htmlContent = view('web.parachute-inspection.report', [
             'title' => 'Laporan Pemeriksaan Parasut',
             'date' => now()->format('d-m-Y'),
@@ -644,6 +697,7 @@ class ParachuteInspectionController extends Controller
             // 'tahun' => $request->tahun,
             'date_end' => $request->date_end,
             'type' => $request->type,
+            'status' => $status,
         ])->render();
 
         $fileName = 'report_' . time() . '.pdf';
@@ -669,6 +723,7 @@ class ParachuteInspectionController extends Controller
             // 'tahun' => 'required|string',
             'date_end' => 'nullable|date',
             'type' => 'nullable|string',
+            'status' => 'nullable|string',
         ]);
         // $query = ParachuteInspection::with('parachute')->orderBy('id', 'desc');
         $query = ParachuteInspection::with(['parachute', 'items.itemDescriptions'])->orderBy('id', 'desc');
@@ -710,6 +765,11 @@ class ParachuteInspectionController extends Controller
         }
         $results  = $query->get();
         // return $results;
+        if ($request->status === '1') {
+            $status = 'Serviceable';
+        } elseif ($request->status === '0') {
+            $status = 'Unserviceable';
+        }
         $data = [
             'title' => 'Lampiran Pemeriksaan Parasut',
             'date' => now()->format('d-m-Y'),
@@ -720,6 +780,7 @@ class ParachuteInspectionController extends Controller
             // 'tahun' => $request->tahun,
             'date_end' => $request->date_end,
             'type' => $request->type,
+            'status' => $status,
         ];
 
         return view('web.parachute-inspection.report-attachment-preview', $data);
@@ -733,6 +794,7 @@ class ParachuteInspectionController extends Controller
             // 'tahun' => 'required|string',
             'date_end' => 'nullable|date',
             'type' => 'nullable|string',
+            'status' => 'nullable|string',
         ]);
 
         $query = ParachuteInspection::with(['parachute', 'items.itemDescriptions'])->orderBy('id', 'desc');
@@ -775,6 +837,11 @@ class ParachuteInspectionController extends Controller
         }
         $data = $query->get();
 
+        if ($request->status === '1') {
+            $status = 'Serviceable';
+        } elseif ($request->status === '0') {
+            $status = 'Unserviceable';
+        }
         $htmlContent = view('web.parachute-inspection.report-attachment', [
             'title' => 'Lampiran Pemeriksaan Parasut',
             'date' => now()->format('d-m-Y'),
@@ -785,6 +852,7 @@ class ParachuteInspectionController extends Controller
             // 'tahun' => $request->tahun,
             'date_end' => $request->date_end,
             'type' => $request->type,
+            'status' => $status,
         ])->render();
 
         $fileName = 'report_' . time() . '.pdf';
@@ -817,6 +885,7 @@ class ParachuteInspectionController extends Controller
             'periode' => 'required|date',
             'date_end' => 'nullable|date',
             'type' => 'nullable|string',
+            'status' => 'nullable|string',
         ]);
 
         $query = ParachuteInspection::with(['parachute', 'items.itemDescriptions'])->orderBy('id', 'desc');
@@ -855,8 +924,13 @@ class ParachuteInspectionController extends Controller
                 }
             });
         }
-
         $data = $query->get();
+
+        if ($request->status === '1') {
+            $status = 'Serviceable';
+        } elseif ($request->status === '0') {
+            $status = 'Unserviceable';
+        }
 
         // Buat file Word
         $phpWord = new PhpWord();
@@ -1024,6 +1098,7 @@ class ParachuteInspectionController extends Controller
             'periode' => 'required|date',
             'date_end' => 'nullable|date',
             'type' => 'nullable|string',
+            'status' => 'nullable|string',
         ]);
         $query = ParachuteInspection::with(['parachute', 'items.itemDescriptions'])->orderBy('id', 'desc');
 
@@ -1061,8 +1136,13 @@ class ParachuteInspectionController extends Controller
                 }
             });
         }
-
         $data = $query->get();
+
+        if ($request->status === '1') {
+            $status = 'Serviceable';
+        } elseif ($request->status === '0') {
+            $status = 'Unserviceable';
+        }
 
         $periode = $request->periode;
         $date = \Carbon\Carbon::parse($periode);
@@ -1184,9 +1264,16 @@ class ParachuteInspectionController extends Controller
             $sheet->setCellValue("E{$row}", $parachute->serial_number ?? '-');
             $sheet->setCellValue("F{$row}", $parachute->serial_number ?? '-');
             $sheet->setCellValue("G{$row}", $descText);
+            // Styling data tabel
+            $sheet->getStyle("A{$row}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+            $sheet->getStyle("B{$row}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+            $sheet->getStyle("C{$row}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+            $sheet->getStyle("D{$row}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+            $sheet->getStyle("E{$row}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+            $sheet->getStyle("F{$row}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+            $sheet->getStyle("G{$row}")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
             // Wrap text untuk kolom Keterangan
             $sheet->getStyle("G{$row}")->getAlignment()->setWrapText(true);
-            $sheet->getStyle("G{$row}")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
             // Border tiap baris data
             $sheet->getStyle("A{$row}:G{$row}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             $row++;
@@ -1244,6 +1331,7 @@ class ParachuteInspectionController extends Controller
             'periode' => 'required|date',
             'date_end' => 'nullable|date',
             'type' => 'nullable|string',
+            'status' => 'nullable|string',
         ]);
 
         $query = ParachuteInspection::with(['parachute', 'items.itemDescriptions'])->orderBy('id', 'desc');
@@ -1283,6 +1371,12 @@ class ParachuteInspectionController extends Controller
             });
         }
         $data = $query->get();
+
+        if ($request->status === '1') {
+            $status = 'Serviceable';
+        } elseif ($request->status === '0') {
+            $status = 'Unserviceable';
+        }
 
         $phpWord = new \PhpOffice\PhpWord\PhpWord();
         // dalam twips (1 cm ≈ 567 twips)

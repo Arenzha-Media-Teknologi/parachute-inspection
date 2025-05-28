@@ -133,7 +133,12 @@
                     </tr>
                     @if($type)
                     <tr>
-                        <td>Tipe Parasut : <strong> {{ $type }} </strong> </td>
+                        <td>Tipe Parasut : <strong> {{ $type }} </strong></td>
+                    </tr>
+                    @endif
+                    @if($status)
+                    <tr>
+                        <td>Status : <strong> {{ $status }} </strong> </td>
                     </tr>
                     @endif
                 </table>

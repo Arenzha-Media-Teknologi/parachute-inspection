@@ -9,9 +9,9 @@ class ParachuteInspectionItemDescription extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'parachute_inspection_item_descriptions';
-
     protected $guarded = [];
+
+    protected $table = 'parachute_inspection_item_descriptions';
 
     public function parachuteInspectionItem()
     {

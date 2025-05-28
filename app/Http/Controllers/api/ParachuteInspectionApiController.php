@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api;
 use App\Http\Controllers\Controller;
 use App\Models\ParachuteInspection;
 use App\Models\ParachuteInspectionItem;
+use App\Models\ParachuteInspectionItemDescription;
 use Carbon\Carbon;
 use Error;
 use Illuminate\Http\Request;
@@ -29,7 +30,7 @@ class ParachuteInspectionApiController extends Controller
                 }
             }
 
-            $parachuteInspectionQuery = ParachuteInspection::with(['parachute', 'items']);
+            $parachuteInspectionQuery = ParachuteInspection::with(['parachute', 'items.descriptions',]);
 
             if (isset($type)) {
                 $parachuteInspectionQuery = $parachuteInspectionQuery->whereRelation('parachute', 'type', $type);
@@ -84,23 +85,7 @@ class ParachuteInspectionApiController extends Controller
     public function getOne($parachuteInspectionId)
     {
         try {
-            $parachuteInspection = ParachuteInspection::with(['items', 'parachute'])->find($parachuteInspectionId);
-            // $parachuteInspectionItems = collect($parachuteInspection->items)->map(function ($parachuteInspectionItem) {
-            //     $parachuteInspectionItem->image_url = 'storage/' . $parachuteInspectionItem->image_url;
-            //     return $parachuteInspectionItem;
-            // })->all();
-
-            // // unset($parachuteInspection->id);
-
-            // // $parachuteInspection->items = $parachuteInspectionItems;
-
-
-
-            // $parachuteInspection->items->each(function ($item) {
-            //     $item->image_url = asset('storage/' . $item->image_url); // langsung set asset()
-            //     $item->test = asset('storage/' . $item->image_url); // langsung set asset()
-            // });
-
+            $parachuteInspection = ParachuteInspection::with(['items.descriptions', 'parachute'])->find($parachuteInspectionId);
             return response()->json([
                 'message' => 'OK',
                 'data' => $parachuteInspection,
@@ -116,6 +101,7 @@ class ParachuteInspectionApiController extends Controller
     {
         DB::beginTransaction();
         try {
+            // return request()->all();
             // $file = $request->file('parachute_inspection_image_0');
             // if (!$file) {
             //     return response()->json([
@@ -183,7 +169,7 @@ class ParachuteInspectionApiController extends Controller
 
                 $data = [
                     'parachute_inspection_id' => $parachuteInspectionId,
-                    'description' => $item['description'],
+                    'description' => $item['description'] ?? null,
                     'image_url' => $filePath,
                     'image_file_name' => $fileOriginalName,
                     'image_file_size' => $fileSize,
@@ -191,7 +177,20 @@ class ParachuteInspectionApiController extends Controller
                     'updated_at' => Carbon::now()->toDateTimeString(),
                 ];
 
-                ParachuteInspectionItem::create($data);
+                $parachuteInspectionItem = ParachuteInspectionItem::create($data);
+
+                $descriptions = $item['descriptions'] ?? [];
+                $descriptionsData = collect($descriptions)->map(function ($description) use ($parachuteInspectionItem) {
+                    return [
+                        'parachute_inspection_item_id' => $parachuteInspectionItem->id,
+                        'description' => $description['text'] ?? null,
+                        'type' => $description['type'] ?? null,
+                        'created_at' => Carbon::now()->toDateTimeString(),
+                        'updated_at' => Carbon::now()->toDateTimeString(),
+                    ];
+                })->all();
+
+                $parachuteInspectionItem->descriptions()->createMany($descriptionsData);
             });
 
 
@@ -286,7 +285,7 @@ class ParachuteInspectionApiController extends Controller
 
                 $data = [
                     'parachute_inspection_id' => $parachuteInspectionId,
-                    'description' => $item['description'],
+                    'description' => $item['description'] ?? null,
                     'image_url' => $filePath,
                     'image_file_name' => $fileOriginalName,
                     'image_file_size' => $fileSize,
@@ -294,7 +293,20 @@ class ParachuteInspectionApiController extends Controller
                     'updated_at' => Carbon::now()->toDateTimeString(),
                 ];
 
-                ParachuteInspectionItem::create($data);
+                $parachuteInspectionItem = ParachuteInspectionItem::create($data);
+
+                $descriptions = $item['descriptions'] ?? [];
+                $descriptionsData = collect($descriptions)->map(function ($description) use ($parachuteInspectionItem) {
+                    return [
+                        'parachute_inspection_item_id' => $parachuteInspectionItem->id,
+                        'description' => $description['text'] ?? null,
+                        'type' => $description['type'] ?? null,
+                        'created_at' => Carbon::now()->toDateTimeString(),
+                        'updated_at' => Carbon::now()->toDateTimeString(),
+                    ];
+                })->all();
+
+                $parachuteInspectionItem->descriptions()->createMany($descriptionsData);
             });
 
 

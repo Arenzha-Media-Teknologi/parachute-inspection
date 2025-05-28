@@ -240,6 +240,8 @@
         let date_start = "{{ request('date_start') }}";
         let periode = "{{ request('periode') }}";
         let date_end = "{{ request('date_end') ?? '' }}";
+        let type = "{{ request('type') ?? '' }}";
+        let status = "{{ request('status') ?? '' }}";
 
         if (!date_start) {
             alert('Tanggal mulai harus diisi');
@@ -249,13 +251,18 @@
             alert('Periode laporan harus diisi');
             return;
         }
-
         btn.disabled = true;
         loading.style.display = 'inline';
 
         let url = "{{ route('parachute-inspection.reportAttachmentPdf') }}" + "?date_start=" + encodeURIComponent(date_start) + "&periode=" + encodeURIComponent(periode);
         if (date_end) {
             url += "&date_end=" + encodeURIComponent(date_end);
+        }
+        if (type) {
+            url += "&type=" + encodeURIComponent(type);
+        }
+        if (status) {
+            url += "&status=" + encodeURIComponent(status);
         }
 
         fetch(url)
@@ -292,6 +299,8 @@
         const date_start = "{{ request('date_start') }}";
         const periode = "{{ request('periode') }}";
         const date_end = "{{ request('date_end') ?? '' }}";
+        const type = "{{ request('type') ?? '' }}";
+        const status = "{{ request('status') ?? '' }}";
 
         if (!date_start) return alert('Tanggal mulai harus diisi');
         if (!periode) return alert('Periode laporan harus diisi');
@@ -309,6 +318,8 @@
         <input type="hidden" name="date_start" value="${date_start}">
         <input type="hidden" name="periode" value="${periode}">
         <input type="hidden" name="date_end" value="${date_end}">
+        <input type="hidden" name="type" value="${type}">
+        <input type="hidden" name="status" value="${status}">
     `;
 
         document.body.appendChild(form);
