@@ -363,6 +363,8 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                     "description": "",
                     "file": "",
                     "previewUrl": null,
+                    mainItems: [],
+                    secondItems: [],
                 });
             },
             removeDetailItem: function(index) {
