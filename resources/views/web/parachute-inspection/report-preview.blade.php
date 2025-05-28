@@ -147,6 +147,11 @@
                         <td>Tipe Parasut : <strong> {{ $type }} </strong> </td>
                     </tr>
                     @endif
+                    @if($status)
+                    <tr>
+                        <td>Status : <strong> {{ $status }} </strong> </td>
+                    </tr>
+                    @endif
                 </table>
             </div>
             <table class="inspection-table">
@@ -226,6 +231,8 @@
         let date_start = "{{ request('date_start') }}";
         let periode = "{{ request('periode') }}";
         let date_end = "{{ request('date_end') ?? '' }}";
+        let type = "{{ request('type') ?? '' }}";
+        let status = "{{ request('status') ?? '' }}";
 
         if (!date_start) {
             alert('Tanggal mulai harus diisi');
@@ -235,13 +242,18 @@
             alert('Periode laporan harus diisi');
             return;
         }
-
         btn.disabled = true;
         loading.style.display = 'inline';
 
         let url = "{{ route('parachute-inspection.reportPdf') }}" + "?date_start=" + encodeURIComponent(date_start) + "&periode=" + encodeURIComponent(periode);
         if (date_end) {
             url += "&date_end=" + encodeURIComponent(date_end);
+        }
+        if (type) {
+            url += "&type=" + encodeURIComponent(type);
+        }
+        if (status) {
+            url += "&status=" + encodeURIComponent(status);
         }
 
         fetch(url)
@@ -281,6 +293,8 @@
         let date_start = "{{ request('date_start') }}";
         let periode = "{{ request('periode') }}";
         let date_end = "{{ request('date_end') ?? '' }}";
+        let type = "{{ request('type') ?? '' }}";
+        let status = "{{ request('status') ?? '' }}";
 
         if (!date_start) {
             alert('Tanggal mulai harus diisi');
@@ -290,11 +304,20 @@
             alert('Periode laporan harus diisi');
             return;
         }
-
         btn.disabled = true;
         loading.style.display = 'inline';
 
-        fetch("{{ route('parachute-inspection.reportWord') }}", {
+        let url = "{{ route('parachute-inspection.reportWord') }}" + "?date_start=" + encodeURIComponent(date_start) + "&periode=" + encodeURIComponent(periode);
+        if (date_end) {
+            url += "&date_end=" + encodeURIComponent(date_end);
+        }
+        if (type) {
+            url += "&type=" + encodeURIComponent(type);
+        }
+        if (status) {
+            url += "&status=" + encodeURIComponent(status);
+        }
+        fetch(url, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -340,6 +363,8 @@
         let date_start = "{{ request('date_start') }}";
         let periode = "{{ request('periode') }}";
         let date_end = "{{ request('date_end') ?? '' }}";
+        let type = "{{ request('type') ?? '' }}";
+        let status = "{{ request('status') ?? '' }}";
 
         if (!date_start) {
             alert('Tanggal mulai harus diisi');
@@ -349,13 +374,18 @@
             alert('Periode laporan harus diisi');
             return;
         }
-
         btn.disabled = true;
         if (loading) loading.style.display = 'inline';
 
         let url = "{{ route('parachute-inspection.reportExcel') }}" + "?date_start=" + encodeURIComponent(date_start) + "&periode=" + encodeURIComponent(periode);
         if (date_end) {
             url += "&date_end=" + encodeURIComponent(date_end);
+        }
+        if (type) {
+            url += "&type=" + encodeURIComponent(type);
+        }
+        if (status) {
+            url += "&status=" + encodeURIComponent(status);
         }
 
         fetch(url)
