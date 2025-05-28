@@ -69,7 +69,12 @@
                                     </div>
                                     <br>
                                     <br>
+                                    @if ($lastBackup == null)
+                                    <span>Terakhir Download : <span class="badge badge-danger">Belum Pernah Backup</span> </span>
+                                    @else
                                     <span>Terakhir Download : {{ \Carbon\Carbon::parse($lastBackup->updated_at ?? '')->format('d M Y H:i') }} </span>
+                                    @endif
+
 
 
                                     <div class="alert alert-danger d-flex flex-column flex-sm-row p-5 mb-10 mt-3">
