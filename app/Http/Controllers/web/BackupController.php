@@ -38,7 +38,7 @@ class BackupController extends Controller
         Log::info('========== STARTING BACKUP PROCESS ==========');
         Log::info('Start Time: ' . now()->toDateTimeString());
 
-        $backupDir = storage_path('app/backups');
+        $backupDir = storage_path('app/public/backups');
         Log::info('Backup Directory: ' . $backupDir);
 
         if (!file_exists($backupDir)) {
@@ -210,7 +210,7 @@ class BackupController extends Controller
 
     public function downloadBackup($filename)
     {
-        $backupDir = storage_path('app/backups');
+        $backupDir = storage_path('app/public/backups');
         $filePath = $backupDir . '/' . $filename;
 
         // Validasi file
