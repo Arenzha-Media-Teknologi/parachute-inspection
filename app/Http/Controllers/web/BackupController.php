@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Spatie\DbDumper\Databases\MySql;
 use Illuminate\Support\Str;
 use ZipArchive;
@@ -31,45 +32,40 @@ class BackupController extends Controller
         set_time_limit(300); // 5 minutes
         ini_set('memory_limit', '512M');
 
-        Log::info('========== STARTING BACKUP PROCESS ==========');
+        Log::info('========== STARTING GOOGLE DRIVE BACKUP PROCESS ==========');
         Log::info('Start Time: ' . now()->toDateTimeString());
 
-        // Initialize backup directory
-        $backupDir = storage_path('app/public/backups');
-        Log::info('Backup Directory: ' . $backupDir);
-
         try {
-            // 1. Verify/Create backup directory with proper permissions
-            $this->ensureBackupDirectoryExists($backupDir);
-
             $timestamp = now()->format('Ymd_His');
-            $filename = 'backup_bundle_' . $timestamp . '.zip';
-            $finalZipFile = $backupDir . '/' . $filename;
+            $backupName = 'backup_' . $timestamp;
 
-            // 2. Backup Database
-            $sqlFile = $this->backupMysqlDatabase($backupDir, $timestamp);
+            // 1. Backup Database
+            $sqlContent = $this->backupMysqlDatabase();
 
-            // 3. Backup Public Folder
-            $publicZipFile = $this->backupPublicFolder($backupDir, $timestamp);
+            // 2. Backup Public Folder
+            $publicZipPath = $this->backupPublicFolder();
 
-            // 4. Create Final Bundle
-            $this->createFinalBackupBundle($finalZipFile, $sqlFile, $publicZipFile);
+            // 3. Upload to Google Drive
+            $drivePath = $this->uploadToGoogleDrive($backupName, $sqlContent, $publicZipPath);
 
-            // 5. Update LastBackup record
-            $this->updateBackupRecord($filename, $finalZipFile);
+            // 4. Update LastBackup record
+            $this->updateBackupRecord($backupName, $drivePath);
 
             Log::info('========== BACKUP PROCESS COMPLETED ==========');
             return response()->json([
                 'success' => true,
-                'filename' => $filename,
-                'download_url' => route('backup.download', ['filename' => $filename]),
-                'file_size' => filesize($finalZipFile),
-                'message' => 'Backup created successfully'
+                'drive_url' => $drivePath,
+                'message' => 'Backup successfully uploaded to Google Drive'
             ]);
         } catch (Exception $e) {
             Log::error('========== BACKUP PROCESS FAILED ==========');
             Log::error('Error: ' . $e->getMessage());
             Log::error('Trace: ' . $e->getTraceAsString());
+
+            // Clean up temporary files if they exist
+            if (isset($publicZipPath) && file_exists($publicZipPath)) {
+                @unlink($publicZipPath);
+            }
 
             return response()->json([
                 'success' => false,
@@ -79,58 +75,42 @@ class BackupController extends Controller
         }
     }
 
-    protected function ensureBackupDirectoryExists(string $path): void
-    {
-        if (!file_exists($path)) {
-            Log::info('Creating backup directory...');
-            if (!mkdir($path, 0755, true)) {
-                throw new Exception("Failed to create backup directory at: {$path}");
-            }
-            Log::info('Backup directory created');
-        }
-
-        // Verify directory is writable
-        if (!is_writable($path)) {
-            throw new Exception("Backup directory is not writable: {$path}");
-        }
-    }
-
-    protected function backupMysqlDatabase(string $backupDir, string $timestamp): string
+    protected function backupMysqlDatabase(): string
     {
         Log::info('--- STARTING DATABASE BACKUP ---');
-        $sqlFile = $backupDir . '/database_' . $timestamp . '.sql';
 
         $command = sprintf(
-            '"%s" --user=%s --password=%s --host=%s --port=%s --protocol=TCP %s > "%s"',
+            '"%s" --user=%s --password=%s --host=%s --port=%s --protocol=TCP %s',
             env('DB_MYSQLDUMP_PATH', 'mysqldump'),
             env('DB_USERNAME', 'root'),
             env('DB_PASSWORD', ''),
             env('DB_HOST', '127.0.0.1'),
             env('DB_PORT', '3306'),
-            config('database.connections.mysql.database'),
-            $sqlFile
+            config('database.connections.mysql.database')
         );
 
         Log::info('Executing: ' . str_replace(env('DB_PASSWORD'), '*****', $command));
 
         exec($command, $output, $returnVar);
 
-        if ($returnVar !== 0 || !file_exists($sqlFile)) {
+        if ($returnVar !== 0) {
             throw new Exception("Database backup failed. Status: {$returnVar}. Output: " . implode("\n", $output));
         }
 
-        Log::info('Database backup completed. Size: ' . filesize($sqlFile) . ' bytes');
-        return $sqlFile;
+        $sqlContent = implode("\n", $output);
+        Log::info('Database backup completed. Size: ' . strlen($sqlContent) . ' bytes');
+
+        return $sqlContent;
     }
 
-    protected function backupPublicFolder(string $backupDir, string $timestamp): string
+    protected function backupPublicFolder(): string
     {
         Log::info('--- STARTING PUBLIC FOLDER BACKUP ---');
-        $publicZipFile = $backupDir . '/public_' . $timestamp . '.zip';
+        $zipPath = storage_path('app/temp_public_backup_' . now()->format('Ymd_His') . '.zip');
 
         $zip = new ZipArchive();
-        if ($zip->open($publicZipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new Exception("Failed to create ZIP archive at: {$publicZipFile}");
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            throw new Exception("Failed to create ZIP archive at: {$zipPath}");
         }
 
         $files = new RecursiveIteratorIterator(
@@ -151,74 +131,86 @@ class BackupController extends Controller
         }
 
         if (!$zip->close()) {
-            throw new Exception("Failed to close ZIP archive. Check permissions for: {$publicZipFile}");
+            throw new Exception("Failed to close ZIP archive: {$zipPath}");
         }
 
-        Log::info("Public folder backup completed. Files: {$fileCount}, Size: " . filesize($publicZipFile) . ' bytes');
-        return $publicZipFile;
+        Log::info("Public folder backup completed. Files: {$fileCount}, Size: " . filesize($zipPath) . ' bytes');
+        return $zipPath;
     }
 
-    protected function createFinalBackupBundle(string $finalZipFile, string $sqlFile, string $publicZipFile): void
+    protected function uploadToGoogleDrive(string $folderName, string $sqlContent, string $publicZipPath): string
     {
-        Log::info('--- CREATING FINAL BACKUP BUNDLE ---');
+        Log::info('--- UPLOADING TO GOOGLE DRIVE ---');
 
-        $zip = new ZipArchive();
-        if ($zip->open($finalZipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new Exception("Failed to create final backup bundle at: {$finalZipFile}");
-        }
+        // Create folder in Google Drive
+        Storage::disk('google')->makeDirectory($folderName);
 
-        $zip->addFile($sqlFile, 'database.sql');
-        $zip->addFile($publicZipFile, 'public.zip');
+        // Upload database backup
+        Storage::disk('google')->put(
+            "{$folderName}/database.sql",
+            $sqlContent
+        );
 
-        if (!$zip->close()) {
-            throw new Exception("Failed to finalize backup bundle. Check permissions for: {$finalZipFile}");
-        }
+        // Upload public folder backup
+        Storage::disk('google')->put(
+            "{$folderName}/public.zip",
+            fopen($publicZipPath, 'r+')
+        );
 
-        // Cleanup temporary files
-        @unlink($sqlFile);
-        @unlink($publicZipFile);
+        // Clean up temporary file
+        @unlink($publicZipPath);
 
-        if (!file_exists($finalZipFile)) {
-            throw new Exception("Final backup file not created at: {$finalZipFile}");
-        }
-
-        Log::info('Final backup created. Size: ' . filesize($finalZipFile) . ' bytes');
+        Log::info('Backup successfully uploaded to Google Drive');
+        return $folderName;
     }
 
-    protected function updateBackupRecord(string $filename, string $finalZipFile): void
+    protected function updateBackupRecord(string $folderName, string $drivePath): void
     {
+        // Get file size from Google Drive
+        $size = 0;
+        try {
+            $size = Storage::disk('google')->size("{$drivePath}/public.zip") / 1024 / 1024;
+        } catch (Exception $e) {
+            Log::error("Failed to get file size from Google Drive: " . $e->getMessage());
+        }
+
         LastBackup::updateOrCreate(
             ['user_id' => Auth::id()],
             [
-                'filename' => $filename,
-                'path' => $finalZipFile,
-                'size_mb' => round(filesize($finalZipFile) / 1024 / 1024, 2),
+                'filename' => $folderName,
+                'path' => $drivePath,
+                'size_mb' => round($size, 2),
                 'updated_at' => now(),
             ]
         );
     }
 
-    public function downloadBackup($filename)
+    public function downloadBackup($folderName)
     {
-        $backupDir = storage_path('app/public/backups');
-        $filePath = $backupDir . '/' . $filename;
+        try {
+            // Check if folder exists
+            $files = Storage::disk('google')->files($folderName);
 
-        if (!file_exists($filePath)) {
-            abort(404, 'Backup file not found');
+            if (empty($files)) {
+                abort(404, 'Backup not found on Google Drive');
+            }
+
+            // Get the public.zip file
+            $filePath = "{$folderName}/public.zip";
+
+            if (!Storage::disk('google')->exists($filePath)) {
+                abort(404, 'Backup file not found');
+            }
+
+            $fileContent = Storage::disk('google')->get($filePath);
+
+            return response($fileContent)
+                ->header('Content-Type', 'application/zip')
+                ->header('Content-Disposition', 'attachment; filename="' . $folderName . '.zip"');
+        } catch (Exception $e) {
+            Log::error('Download failed: ' . $e->getMessage());
+            abort(500, 'Failed to download backup');
         }
-
-        if (pathinfo($filename, PATHINFO_EXTENSION) !== 'zip') {
-            abort(400, 'Invalid file format');
-        }
-
-        return response()->download(
-            $filePath,
-            basename($filePath),
-            [
-                'Content-Type' => 'application/zip',
-                'Content-Disposition' => 'attachment; filename="' . basename($filePath) . '"'
-            ]
-        )->deleteFileAfterSend(true);
     }
 
     /**

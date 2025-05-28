@@ -69,6 +69,15 @@ return [
             'report' => false,
         ],
 
+        'google' => [
+            'driver' => 'google',
+            'clientId' => env('GOOGLE_DRIVE_CLIENT_ID'),
+            'clientSecret' => env('GOOGLE_DRIVE_CLIENT_SECRET'),
+            'folderId' => env('GOOGLE_DRIVE_FOLDER_ID'),
+            'credentials' => storage_path('app/' . env('GOOGLE_DRIVE_CREDENTIALS_PATH')),
+        ],
+
+
     ],
 
     /*
