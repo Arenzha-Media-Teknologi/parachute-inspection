@@ -26,4 +26,9 @@ class ParachuteInspectionItem extends Model
     {
         return $this->belongsTo(ParachuteInspection::class, 'parachute_inspection_id', 'id');
     }
+
+    public function descriptions()
+    {
+        return $this->hasMany(ParachuteInspectionItemDescription::class);
+    }
 }
