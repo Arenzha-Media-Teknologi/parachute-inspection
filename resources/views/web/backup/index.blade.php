@@ -69,7 +69,7 @@
                                     </div>
                                     <br>
                                     <br>
-                                    <span>Terakhir Download : {{ \Carbon\Carbon::parse($lastBackup->updated_at)->format('d M Y H:i') }} </span>
+                                    <span>Terakhir Download : {{ \Carbon\Carbon::parse($lastBackup->updated_at ?? '')->format('d M Y H:i') }} </span>
 
 
                                     <div class="alert alert-danger d-flex flex-column flex-sm-row p-5 mb-10 mt-3">
