@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/report-attachment/generate-pdf', 'reportAttachmentPdf')->name('parachute-inspection.reportAttachmentPdf');
         Route::post('/report-attachment/generate-word', 'reportAttachmentWord')->name('parachute-inspection.reportAttachmentWord');
         Route::get('/report/unserviceable', 'reportUnserviceable')->name('parachute-inspection.reportUnserviceable');
+        Route::get('/print-tag/{id}', 'printTag')->name('parachute-inspection.printTag');
     });
 
     Route::controller(UserGroupController::class)->prefix('/group')->group(function () {

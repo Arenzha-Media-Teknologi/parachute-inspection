@@ -1584,4 +1584,26 @@ class ParachuteInspectionController extends Controller
 
         return view('web.parachute-inspection.report-unserviceable', $data);
     }
+
+    public function printTag(Request $request, string $id)
+    {
+        $query = ParachuteInspection::with(['parachute', 'items.itemDescriptions'])
+            ->where('id', $id)
+            ->whereHas('items', function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('status', '!=', '1')
+                        ->orWhereNull('status');
+                });
+            })
+            ->orderBy('id', 'desc');
+        $result = $query->firstOrFail();
+        $data = [
+            'title' => 'UNSERVICEABLE TAG',
+            'date' => now()->format('d-m-Y'),
+            'data' => $result,
+        ];
+        // return $data;
+
+        return view('web.parachute-inspection.report-unserviceable-tag', $data);
+    }
 }
