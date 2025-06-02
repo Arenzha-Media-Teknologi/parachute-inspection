@@ -611,8 +611,6 @@ class ParachuteInspectionController extends Controller
 
         if ($request->status === '1') {
             $status = 'Serviceable';
-        } elseif ($request->status === '0') {
-            $status = 'Unserviceable';
         }
         $results  = $query->get();
         $data = [
@@ -625,7 +623,7 @@ class ParachuteInspectionController extends Controller
             // 'tahun' => $request->tahun,
             'date_end' => $request->date_end,
             'type' => $request->type,
-            'status' => $status ?? '',
+            'status' => $status ?? $request->status,
         ];
 
         return view('web.parachute-inspection.report-preview', $data);
@@ -684,8 +682,6 @@ class ParachuteInspectionController extends Controller
 
         if ($request->status === '1') {
             $status = 'Serviceable';
-        } elseif ($request->status === '0') {
-            $status = 'Unserviceable';
         }
         $htmlContent = view('web.parachute-inspection.report', [
             'title' => 'Laporan Pemeriksaan Parasut',
@@ -697,7 +693,7 @@ class ParachuteInspectionController extends Controller
             // 'tahun' => $request->tahun,
             'date_end' => $request->date_end,
             'type' => $request->type,
-            'status' => $status,
+            'status' => $status ?? $request->status,
         ])->render();
 
         $fileName = 'report_' . time() . '.pdf';
@@ -767,8 +763,6 @@ class ParachuteInspectionController extends Controller
         // return $results;
         if ($request->status === '1') {
             $status = 'Serviceable';
-        } elseif ($request->status === '0') {
-            $status = 'Unserviceable';
         }
         $data = [
             'title' => 'Lampiran Pemeriksaan Parasut',
@@ -780,7 +774,7 @@ class ParachuteInspectionController extends Controller
             // 'tahun' => $request->tahun,
             'date_end' => $request->date_end,
             'type' => $request->type,
-            'status' => $status,
+            'status' => $status ?? $request->status,
         ];
 
         return view('web.parachute-inspection.report-attachment-preview', $data);
@@ -839,8 +833,6 @@ class ParachuteInspectionController extends Controller
 
         if ($request->status === '1') {
             $status = 'Serviceable';
-        } elseif ($request->status === '0') {
-            $status = 'Unserviceable';
         }
         $htmlContent = view('web.parachute-inspection.report-attachment', [
             'title' => 'Lampiran Pemeriksaan Parasut',
@@ -852,7 +844,7 @@ class ParachuteInspectionController extends Controller
             // 'tahun' => $request->tahun,
             'date_end' => $request->date_end,
             'type' => $request->type,
-            'status' => $status,
+            'status' => $status ?? $request->status,
         ])->render();
 
         $fileName = 'report_' . time() . '.pdf';
