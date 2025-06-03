@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Spatie\DbDumper\Databases\MySql;
+use Yaza\LaravelGoogleDriveStorage\Gdrive;
 use Illuminate\Support\Str;
 use ZipArchive;
 use RecursiveIteratorIterator;
@@ -28,7 +28,6 @@ class BackupController extends Controller
 
     public function backupDatabase(Request $request)
     {
-        // Configure environment
         set_time_limit(300); // 5 minutes
         ini_set('memory_limit', '512M');
 
@@ -45,7 +44,7 @@ class BackupController extends Controller
             // 2. Backup Public Folder
             $publicZipPath = $this->backupPublicFolder();
 
-            // 3. Upload to Google Drive
+            // 3. Upload to Google Drive (langsung ke folder yang ditentukan)
             $drivePath = $this->uploadToGoogleDrive($backupName, $sqlContent, $publicZipPath);
 
             // 4. Update LastBackup record
@@ -138,38 +137,32 @@ class BackupController extends Controller
         return $zipPath;
     }
 
-    protected function uploadToGoogleDrive(string $folderName, string $sqlContent, string $publicZipPath): string
+
+
+    protected function uploadToGoogleDrive(string $backupName, string $sqlContent, string $publicZipPath): string
     {
-        Log::info('--- UPLOADING TO GOOGLE DRIVE ---');
+        try {
+            // Upload file menggunakan Service Account
+            Gdrive::put("{$backupName}_database.sql", $sqlContent);
+            Gdrive::put("{$backupName}_public.zip", file_get_contents($publicZipPath));
 
-        // Create folder in Google Drive
-        Storage::disk('google')->makeDirectory($folderName);
+            // Hapus file temporary
+            @unlink($publicZipPath);
 
-        // Upload database backup
-        Storage::disk('google')->put(
-            "{$folderName}/database.sql",
-            $sqlContent
-        );
-
-        // Upload public folder backup
-        Storage::disk('google')->put(
-            "{$folderName}/public.zip",
-            fopen($publicZipPath, 'r+')
-        );
-
-        // Clean up temporary file
-        @unlink($publicZipPath);
-
-        Log::info('Backup successfully uploaded to Google Drive');
-        return $folderName;
+            return $backupName;
+        } catch (Exception $e) {
+            @unlink($publicZipPath);
+            throw new Exception("Google Drive upload failed: " . $e->getMessage());
+        }
     }
 
-    protected function updateBackupRecord(string $folderName, string $drivePath): void
+    protected function updateBackupRecord(string $backupName, string $drivePath): void
     {
         // Get file size from Google Drive
         $size = 0;
         try {
-            $size = Storage::disk('google')->size("{$drivePath}/public.zip") / 1024 / 1024;
+            $publicFileName = "{$backupName}_public.zip";
+            $size = Storage::disk('google')->size($publicFileName) / 1024 / 1024;
         } catch (Exception $e) {
             Log::error("Failed to get file size from Google Drive: " . $e->getMessage());
         }
@@ -177,7 +170,7 @@ class BackupController extends Controller
         LastBackup::updateOrCreate(
             ['user_id' => Auth::id()],
             [
-                'filename' => $folderName,
+                'filename' => $backupName,
                 'path' => $drivePath,
                 'size_mb' => round($size, 2),
                 'updated_at' => now(),
@@ -185,79 +178,23 @@ class BackupController extends Controller
         );
     }
 
-    public function downloadBackup($folderName)
+    public function downloadBackup($backupName)
     {
         try {
-            // Check if folder exists
-            $files = Storage::disk('google')->files($folderName);
+            $publicFileName = "{$backupName}_public.zip";
 
-            if (empty($files)) {
-                abort(404, 'Backup not found on Google Drive');
-            }
-
-            // Get the public.zip file
-            $filePath = "{$folderName}/public.zip";
-
-            if (!Storage::disk('google')->exists($filePath)) {
+            if (!Storage::disk('google')->exists($publicFileName)) {
                 abort(404, 'Backup file not found');
             }
 
-            $fileContent = Storage::disk('google')->get($filePath);
+            $fileContent = Storage::disk('google')->get($publicFileName);
 
             return response($fileContent)
                 ->header('Content-Type', 'application/zip')
-                ->header('Content-Disposition', 'attachment; filename="' . $folderName . '.zip"');
+                ->header('Content-Disposition', 'attachment; filename="' . $backupName . '.zip"');
         } catch (Exception $e) {
             Log::error('Download failed: ' . $e->getMessage());
             abort(500, 'Failed to download backup');
         }
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }

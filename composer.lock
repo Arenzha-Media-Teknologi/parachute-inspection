@@ -4,8 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-
-    "content-hash": "07f36e881068e55d3f76ec4ad0c222fc",
+    "content-hash": "500e66c4f377d6d904513a51dba174c3",
     "packages": [
         {
             "name": "brick/math",
@@ -3194,7 +3193,6 @@
             "time": "2020-10-15T08:29:30+00:00"
         },
         {
-
             "name": "phpoffice/math",
             "version": "0.2.0",
             "source": {
@@ -3247,7 +3245,6 @@
             "time": "2024-08-12T07:30:45+00:00"
         },
         {
-
             "name": "phpoffice/phpspreadsheet",
             "version": "4.3.1",
             "source": {
@@ -7500,6 +7497,78 @@
                 }
             ],
             "time": "2025-02-26T13:54:38+00:00"
+        },
+        {
+            "name": "yaza/laravel-google-drive-storage",
+            "version": "V4.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/yaza-putu/laravel-google-drive-storage.git",
+                "reference": "2a75271a9756a22ef493cbbdc752e1cd2e8a118c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/yaza-putu/laravel-google-drive-storage/zipball/2a75271a9756a22ef493cbbdc752e1cd2e8a118c",
+                "reference": "2a75271a9756a22ef493cbbdc752e1cd2e8a118c",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^10.0||^11.0||^12.0",
+                "masbug/flysystem-google-drive-ext": "^2.2",
+                "php": "^8.2",
+                "spatie/laravel-package-tools": "^1.16"
+            },
+            "require-dev": {
+                "larastan/larastan": "^2.9||^3.0",
+                "laravel/pint": "^1.14",
+                "nunomaduro/collision": "^8.1.1||^7.10.0",
+                "orchestra/testbench": "^10.0.0||^9.0.0||^8.22.0",
+                "pestphp/pest": "^3.0",
+                "pestphp/pest-plugin-arch": "^3.0",
+                "pestphp/pest-plugin-laravel": "^3.0",
+                "phpstan/extension-installer": "^1.3||^2.0",
+                "phpstan/phpstan-deprecation-rules": "^1.1||^2.0",
+                "phpstan/phpstan-phpunit": "^1.3||^2.0",
+                "spatie/laravel-ray": "^1.35"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "LaravelGoogleDriveStorage": "Yaza\\LaravelGoogleDriveStorage\\Facades\\LaravelGoogleDriveStorage"
+                    },
+                    "providers": [
+                        "Yaza\\LaravelGoogleDriveStorage\\LaravelGoogleDriveStorageServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Yaza\\LaravelGoogleDriveStorage\\": "src",
+                    "Yaza\\LaravelGoogleDriveStorage\\Database\\Factories\\": "database/factories"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "yaza",
+                    "email": "wayan13yasa@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "This is my package laravel-google-drive-storage",
+            "homepage": "https://github.com/yaza-putu/laravel-google-drive-storage",
+            "keywords": [
+                "laravel-google-drive-storage"
+            ],
+            "support": {
+                "issues": "https://github.com/yaza-putu/laravel-google-drive-storage/issues",
+                "source": "https://github.com/yaza-putu/laravel-google-drive-storage/tree/V4.1.0"
+            },
+            "time": "2025-03-22T10:42:07+00:00"
         }
     ],
     "packages-dev": [
