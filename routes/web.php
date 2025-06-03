@@ -8,6 +8,7 @@ use App\Http\Controllers\web\UserController;
 use App\Http\Controllers\web\ParachuteController;
 use App\Http\Controllers\web\UserGroupController;
 use Illuminate\Support\Facades\Route;
+use Yaza\LaravelGoogleDriveStorage\Gdrive;
 
 
 
@@ -19,6 +20,15 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function () {
+
+    Route::get('/test-gdrive', function () {
+        try {
+            Gdrive::put('test.txt', 'Hello Google Drive');
+            return 'File uploaded successfully!';
+        } catch (Exception $e) {
+            return 'Error: ' . $e->getMessage();
+        }
+    });
 
     Route::controller(DashboardController::class)->prefix('/')->group(function () {
         Route::get('/', 'index')->name('dashboard');
