@@ -29,4 +29,14 @@ class ParachuteInspection extends Model
     {
         return $this->belongsTo(Parachute::class, 'parachute_id');
     }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedByUser()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
 }
