@@ -159,52 +159,52 @@ class ParachuteInspectionController extends Controller
 
             // Temp ID → Model mapping
             $tempItemMap = [];
+            if ($request->filled('items') && is_array($request->items)) {
+                foreach ($request->items as $idx => $item) {
+                    // Jika item utama (bukan child)
+                    if (empty($item['parent_temp_id']) && isset($item['created'])) {
+                        $data = [
+                            'description' => $item['description'] ?? null,
+                            'status' => ($item['status'] === true || $item['status'] === '1' || $item['status'] === 1 || $item['status'] === 'true') ? '1' : '0',
+                            'created_at' => Carbon::parse($item['created'])->format('Y-m-d H:i:s'),
+                        ];
 
-            foreach ($request->items as $idx => $item) {
-                // Jika item utama (bukan child)
-                if (empty($item['parent_temp_id']) && isset($item['created'])) {
-                    $data = [
-                        'description' => $item['description'] ?? null,
-                        'status' => ($item['status'] === true || $item['status'] === '1' || $item['status'] === 1 || $item['status'] === 'true') ? '1' : '0',
-                        'created_at' => Carbon::parse($item['created'])->format('Y-m-d H:i:s'),
-                    ];
+                        if (!empty($item['status_date'])) {
+                            $data['status_date'] = Carbon::parse($item['status_date'])->format('Y-m-d H:i:s');
+                        }
 
-                    if (!empty($item['status_date'])) {
-                        $data['status_date'] = Carbon::parse($item['status_date'])->format('Y-m-d H:i:s');
+                        if ($request->hasFile("items.$idx.file")) {
+                            $f = $request->file("items.$idx.file");
+                            $path = $f->store('parachute-files', 'public');
+                            $data['image_url'] = $path;
+                            $data['image_file_name'] = $f->getClientOriginalName();
+                            $data['image_file_size'] = $f->getSize();
+                        }
+
+                        $model = $inspection->items()->create($data);
+
+                        // Simpan ke map jika ada temp_id
+                        if (!empty($item['temp_id'])) {
+                            $tempItemMap[$item['temp_id']] = $model;
+                        }
+
+                        continue;
                     }
 
-                    if ($request->hasFile("items.$idx.file")) {
-                        $f = $request->file("items.$idx.file");
-                        $path = $f->store('parachute-files', 'public');
-                        $data['image_url'] = $path;
-                        $data['image_file_name'] = $f->getClientOriginalName();
-                        $data['image_file_size'] = $f->getSize();
-                    }
-
-                    $model = $inspection->items()->create($data);
-
-                    // Simpan ke map jika ada temp_id
-                    if (!empty($item['temp_id'])) {
-                        $tempItemMap[$item['temp_id']] = $model;
-                    }
-
-                    continue;
-                }
-
-                // Jika item deskripsi anak (utama/cadangan)
-                if (!empty($item['description']) && !empty($item['parent_temp_id'])) {
-                    $parentTempId = $item['parent_temp_id'];
-                    if (isset($tempItemMap[$parentTempId])) {
-                        $tempItemMap[$parentTempId]->itemDescriptions()->create([
-                            'type' => $item['type'] ?? null,
-                            'description' => $item['description'],
-                        ]);
+                    // Jika item deskripsi anak (utama/cadangan)
+                    if (!empty($item['description']) && !empty($item['parent_temp_id'])) {
+                        $parentTempId = $item['parent_temp_id'];
+                        if (isset($tempItemMap[$parentTempId])) {
+                            $tempItemMap[$parentTempId]->itemDescriptions()->create([
+                                'type' => $item['type'] ?? null,
+                                'description' => $item['description'],
+                            ]);
+                        }
                     }
                 }
             }
 
             DB::commit();
-
             return response()->json([
                 'message' => 'Data berhasil disimpan',
                 'data' => $inspection
@@ -406,7 +406,9 @@ class ParachuteInspectionController extends Controller
                             }
 
                             if ($request->hasFile("items.$idx.file")) {
-                                Storage::disk('public')->delete($model->image_url);
+                                if (!empty($model->image_url)) {
+                                    Storage::disk('public')->delete($model->image_url);
+                                }
                                 $f = $request->file("items.$idx.file");
                                 $path = $f->store('parachute-files', 'public');
                                 $update['image_url']       = $path;
@@ -426,10 +428,10 @@ class ParachuteInspectionController extends Controller
                             'status' => ($item['status'] === true || $item['status'] === '1' || $item['status'] === 1 || $item['status'] === 'true') ? '1' : '0',
                             'created_at'  => Carbon::parse($item['created'])->format('Y-m-d H:i:s'),
                             // 'created_at'  => Carbon::createFromFormat('Y-m-d\TH:i', $item['created'])->format('Y-m-d H:i:s'),
-                            'status_date' => Carbon::parse($item['status_date'])->format('Y-m-d H:i:s'),
-                            // 'status_date' => isset($item['status_date']) && !empty($item['status_date'])
-                            //     ? Carbon::createFromFormat('Y-m-d\TH:i', $item['status_date'])->format('Y-m-d H:i:s')
-                            //     : null,
+                            // 'status_date' => Carbon::parse($item['status_date'])->format('Y-m-d H:i:s'),
+                            'status_date' => isset($item['status_date']) && !empty($item['status_date'])
+                                ? Carbon::createFromFormat('Y-m-d\TH:i', $item['status_date'])->format('Y-m-d H:i:s')
+                                : null,
 
                         ];
                         if ($request->hasFile("items.$idx.file")) {
@@ -483,7 +485,9 @@ class ParachuteInspectionController extends Controller
 
             $pi->items()->whereNotIn('id', $keptItemIds)->get()
                 ->each(function ($it) {
-                    Storage::disk('public')->delete($it->image_url);
+                    if (!empty($it->image_url)) {
+                        Storage::disk('public')->delete($it->image_url);
+                    }
                     $it->delete();
                 });
 

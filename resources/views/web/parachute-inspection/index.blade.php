@@ -1286,8 +1286,8 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                         text: 'Data berhasil dihapus',
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // window.location.reload();
                             Table.ajax.reload();
+                            window.location.reload();
                         }
                     })
                 }
