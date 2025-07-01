@@ -22,6 +22,8 @@ class ParachuteInspectionApiController extends Controller
             $startDate = request()->query('start_date');
             $endDate = request()->query('end_date');
             $type = request()->query('type');
+            $category = request()->query('category');
+            $repairStatus = request()->query('repairStatus');
             $searchKeyword = request()->query('search');
 
             if (isset($isPagination)) {
@@ -30,14 +32,32 @@ class ParachuteInspectionApiController extends Controller
                 }
             }
 
-            $parachuteInspectionQuery = ParachuteInspection::with(['parachute', 'items.descriptions',]);
+            $parachuteInspectionQuery = ParachuteInspection::with(['parachute', 'items.descriptions', 'createdByUser', 'updatedByUser']);
 
             if (isset($type)) {
                 $parachuteInspectionQuery = $parachuteInspectionQuery->whereRelation('parachute', 'type', $type);
             }
 
+            if (isset($category)) {
+                $parachuteInspectionQuery = $parachuteInspectionQuery->whereRelation('parachute', 'category', $category);
+            }
+
             if (isset($startDate) && isset($endDate)) {
                 $parachuteInspectionQuery = $parachuteInspectionQuery->whereBetween('date', [$startDate, $endDate]);
+            }
+
+            if (isset($repairStatus) && $repairStatus !== '') {
+                if ($repairStatus === 'serviceable') {
+                    // Filter for inspections where ALL items have status = 1
+                    $parachuteInspectionQuery = $parachuteInspectionQuery->whereDoesntHave('items', function ($query) {
+                        $query->where('status', '!=', 1);
+                    })->whereHas('items'); // Ensure there are items
+                } elseif ($repairStatus === 'unserviceable') {
+                    // Filter for inspections where NOT ALL items have status = 1 (at least one item has status != 1)
+                    $parachuteInspectionQuery = $parachuteInspectionQuery->whereHas('items', function ($query) {
+                        $query->where('status', '!=', 1);
+                    });
+                }
             }
 
             // if (isset($searchKeyword)) {
@@ -173,6 +193,8 @@ class ParachuteInspectionApiController extends Controller
                     'image_url' => $filePath,
                     'image_file_name' => $fileOriginalName,
                     'image_file_size' => $fileSize,
+                    'status' => $item['status'],
+                    'status_date' => $item['status_date'],
                     'created_at' => Carbon::now()->toDateTimeString(),
                     'updated_at' => Carbon::now()->toDateTimeString(),
                 ];
@@ -259,7 +281,7 @@ class ParachuteInspectionApiController extends Controller
             $parachuteInspection->activity_name = $request->activity_name;
             $parachuteInspection->person_in_charge = $request->person_in_charge;
             $parachuteInspection->parachute_id = $request->parachute_id;
-            $parachuteInspection->created_by = $request->created_by;
+            $parachuteInspection->updated_by = $request->updated_by;
             $parachuteInspection->save();
 
             $parachuteInspectionItems = $request->items;
@@ -289,6 +311,8 @@ class ParachuteInspectionApiController extends Controller
                     'image_url' => $filePath,
                     'image_file_name' => $fileOriginalName,
                     'image_file_size' => $fileSize,
+                    'status' => $item['status'],
+                    'status_date' => $item['status_date'],
                     'created_at' => Carbon::now()->toDateTimeString(),
                     'updated_at' => Carbon::now()->toDateTimeString(),
                 ];
