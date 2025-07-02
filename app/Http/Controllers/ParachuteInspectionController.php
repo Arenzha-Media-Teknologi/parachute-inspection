@@ -161,14 +161,14 @@ class ParachuteInspectionController extends Controller
             $tempItemMap = [];
             if ($request->filled('items') && is_array($request->items)) {
                 foreach ($request->items as $idx => $item) {
-                    // Jika item utama (bukan child)
+                    // Jika item utama
                     if (empty($item['parent_temp_id']) && isset($item['created'])) {
                         $data = [
+                            'date' => Carbon::parse($item['created'])->format('Y-m-d H:i:s'),
                             'description' => $item['description'] ?? null,
                             'status' => ($item['status'] === true || $item['status'] === '1' || $item['status'] === 1 || $item['status'] === 'true') ? '1' : '0',
                             'created_at' => Carbon::parse($item['created'])->format('Y-m-d H:i:s'),
                         ];
-
                         if (!empty($item['status_date'])) {
                             $data['status_date'] = Carbon::parse($item['status_date'])->format('Y-m-d H:i:s');
                         }
@@ -180,18 +180,15 @@ class ParachuteInspectionController extends Controller
                             $data['image_file_name'] = $f->getClientOriginalName();
                             $data['image_file_size'] = $f->getSize();
                         }
-
                         $model = $inspection->items()->create($data);
 
                         // Simpan ke map jika ada temp_id
                         if (!empty($item['temp_id'])) {
                             $tempItemMap[$item['temp_id']] = $model;
                         }
-
                         continue;
                     }
-
-                    // Jika item deskripsi anak (utama/cadangan)
+                    // Jika item cadangan
                     if (!empty($item['description']) && !empty($item['parent_temp_id'])) {
                         $parentTempId = $item['parent_temp_id'];
                         if (isset($tempItemMap[$parentTempId])) {
@@ -424,6 +421,7 @@ class ParachuteInspectionController extends Controller
                         }
                     } else {
                         $data = [
+                            'date'  => Carbon::parse($item['created'])->format('Y-m-d H:i:s'),
                             'description' => $item['description'] ?? null,
                             'status' => ($item['status'] === true || $item['status'] === '1' || $item['status'] === 1 || $item['status'] === 'true') ? '1' : '0',
                             'created_at'  => Carbon::parse($item['created'])->format('Y-m-d H:i:s'),
