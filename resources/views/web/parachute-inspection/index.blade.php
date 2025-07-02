@@ -617,9 +617,13 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
         computed: {
             totalServiceable() {
                 return this.parachuteInspection.filter(pi => {
-                    return (pi.items || []).some(item =>
-                        (item.status === 1 || item.status === '1') &&
-                        item.status_date
+                    if ((pi.items || []).length == 0) {
+                        return false;
+                    }
+                    return (pi.items || []).every(item =>
+                        // (item.status === 1 || item.status === '1') &&
+                        // item.status_date
+                        item.status == 1
                     );
                 }).length;
             },
