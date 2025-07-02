@@ -57,18 +57,30 @@ class ParachuteInspectionController extends Controller
             });
         }
         if ($request->filled('status')) {
-            $query->whereHas('items', function ($q) use ($request) {
-                if ($request->status === '1') {
-                    // Serviceable
-                    $q->where('status', '1');
-                } elseif ($request->status === '0') {
-                    // Unserviceable
-                    $q->where(function ($sub) {
-                        $sub->where('status', '!=', '1')
-                            ->orWhereNull('status');
-                    });
-                }
-            });
+            if ($request->status === '1') {
+                // Filter for inspections where ALL items have status = 1
+                $query->whereDoesntHave('items', function ($query) {
+                    $query->where('status', '!=', 1);
+                })->whereHas('items'); // Ensure there are items
+            } elseif ($request->status === '0') {
+                // Filter for inspections where NOT ALL items have status = 1 (at least one item has status != 1)
+                $query->whereHas('items', function ($query) {
+                    $query->where('status', '!=', 1);
+                });
+            }
+
+            // $query->whereHas('items', function ($q) use ($request) {
+            //     if ($request->status === '1') {
+            //         // Serviceable
+            //         $q->where('status', '1');
+            //     } elseif ($request->status === '0') {
+            //         // Unserviceable
+            //         $q->where(function ($sub) {
+            //             $sub->where('status', '!=', '1')
+            //                 ->orWhereNull('status');
+            //         });
+            //     }
+            // });
         }
 
         $userIds = $query->pluck('updated_by')->merge($query->pluck('created_by'))->unique()->filter();
@@ -112,6 +124,65 @@ class ParachuteInspectionController extends Controller
             ->addColumn('action', 'web.layouts.button.parachute-inspection-button')
             ->rawColumns(['user', 'status', 'action'])
             ->make(true);
+    }
+
+    public function getParachuteInspectionNumber(Request $request)
+    {
+        $query = ParachuteInspection::with(['parachute', 'items.itemDescriptions'])->orderBy('id', 'desc');
+
+        $filter = $request->number;
+        if (!empty($filter)) {
+            $query->where(function ($q) use ($filter) {
+                $q->where('number', 'like', '%' . $filter . '%')
+                    ->orWhereHas('parachute', function ($p) use ($filter) {
+                        $p->where('type', 'like', '%' . $filter . '%')
+                            ->orWhere('part_number', 'like', '%' . $filter . '%')
+                            ->orWhere('serial_number', 'like', '%' . $filter . '%');
+                    });
+            });
+        }
+
+        if ($request->filled('date_start') && $request->filled('date_end')) {
+            $query->whereBetween('date', [$request->date_start, $request->date_end]);
+        } elseif ($request->filled('date_start')) {
+            $query->where('date', '=', $request->date_start);
+        }
+        if ($request->filled('type')) {
+            $query->whereHas('parachute', function ($q) use ($request) {
+                $q->where('type', 'like', '%' . $request->type . '%');
+            });
+        }
+        if ($request->filled('status')) {
+            if ($request->status === '1') {
+                // Filter for inspections where ALL items have status = 1
+                $query->whereDoesntHave('items', function ($query) {
+                    $query->where('status', '!=', 1);
+                })->whereHas('items'); // Ensure there are items
+            } elseif ($request->status === '0') {
+                // Filter for inspections where NOT ALL items have status = 1 (at least one item has status != 1)
+                $query->whereHas('items', function ($query) {
+                    $query->where('status', '!=', 1);
+                });
+            }
+
+            // $query->whereHas('items', function ($q) use ($request) {
+            //     if ($request->status === '1') {
+            //         // Serviceable
+            //         $q->where('status', '1');
+            //     } elseif ($request->status === '0') {
+            //         // Unserviceable
+            //         $q->where(function ($sub) {
+            //             $sub->where('status', '!=', '1')
+            //                 ->orWhereNull('status');
+            //         });
+            //     }
+            // });
+        }
+
+        return
+            [
+                'data' => $query->get()
+            ];
     }
 
     public function index()
@@ -984,7 +1055,8 @@ class ParachuteInspectionController extends Controller
         // Tambahkan tabel
         $fontHeader = [
             // 'name' => 'Calibri',
-            'size' => 9, 'bold' => true
+            'size' => 9,
+            'bold' => true
         ];
         $fontData = ['size' => 8];
         $alignCenter = ['alignment' => 'center'];
@@ -1470,8 +1542,8 @@ class ParachuteInspectionController extends Controller
                 $cell2 = $table->addCell(6000, ['valign' => 'top']);
 
                 $descs = $subitem->itemDescriptions ?? collect();
-                $utama = $descs->filter(fn ($d) => strtolower($d->type ?? '') === 'utama');
-                $cadangan = $descs->filter(fn ($d) => strtolower($d->type ?? '') === 'cadangan');
+                $utama = $descs->filter(fn($d) => strtolower($d->type ?? '') === 'utama');
+                $cadangan = $descs->filter(fn($d) => strtolower($d->type ?? '') === 'cadangan');
 
                 if ($utama->count()) {
                     $cell2->addText('Utama:', ['bold' => true]);

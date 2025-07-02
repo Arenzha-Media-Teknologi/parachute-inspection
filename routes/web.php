@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/report-attachment/generate-word', 'reportAttachmentWord')->name('parachute-inspection.reportAttachmentWord');
         Route::get('/report/unserviceable', 'reportUnserviceable')->name('parachute-inspection.reportUnserviceable');
         Route::get('/print-tag/{id}', 'printTag')->name('parachute-inspection.printTag');
+        Route::get('/resources/number', 'getParachuteInspectionNumber')->name('parachute-inspection.resource.number');
     });
 
     Route::controller(UserGroupController::class)->prefix('/group')->group(function () {
@@ -87,6 +88,7 @@ Route::middleware('auth')->group(function () {
     Route::controller(BackupController::class)->prefix('/backup')->group(function () {
         Route::get('/', 'index')->name('backup.index');
         Route::post('/backup-data', 'backupDatabase')->name('backup.database');
+        Route::post('/restore', 'restore')->name('backup.restore');
     });
 
     Route::get('/backup/download/{filename}', [BackupController::class, 'downloadBackup'])

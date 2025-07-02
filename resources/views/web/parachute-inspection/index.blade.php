@@ -658,6 +658,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     return;
                 }
                 $('#parachute-table').DataTable().ajax.reload();
+                this.getParachuteInspectionNumber();
             },
 
             openReportModal() {
@@ -761,13 +762,39 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 // const paddedNumber = String(nextNumber).padStart(3, '0');
                 // this.code = `PR-${dateStr}-${paddedNumber}`;
 
-                axios.get('/parachute-inspection/generate-code')
+
+                axios.get('/parachute-inspection/generate-code', )
                     .then(response => {
                         this.code = response.data.code;
                     })
                     .catch(error => {
                         console.error('Gagal generate code:', error);
                     });
+            },
+            async getParachuteInspectionNumber() {
+                try {
+                    const startDate = this.date_start;
+                    const endDate = this.date_end;
+                    const type = this.parachuteType;
+                    const status = this.parachuteStatus;
+
+                    const response = await axios.get('/parachute-inspection/resources/number', {
+                        params: {
+                            date_start: startDate,
+                            date_end: endDate,
+                            type,
+                            status,
+                        }
+                    });
+
+                    if (response) {
+                        this.parachuteInspection = response?.data?.data;
+                    }
+
+
+                } catch (error) {
+                    console.log(error);
+                }
             },
             onModalOpen() {
                 this.generateCode();
