@@ -412,6 +412,7 @@ class ParachuteInspectionController extends Controller
                                 $update['image_file_name'] = $f->getClientOriginalName();
                                 $update['image_file_size'] = $f->getSize();
                             }
+                            $update['date'] = Carbon::parse($item['created'])->format('Y-m-d H:i:s');
                             $update['created_at'] = Carbon::parse($item['created'])->format('Y-m-d H:i:s');
                             // $update['created_at'] = Carbon::createFromFormat('Y-m-d\TH:i', $item['created'])->format('Y-m-d H:i:s');
 
