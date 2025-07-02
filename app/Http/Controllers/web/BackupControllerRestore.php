@@ -14,7 +14,7 @@ use ZipArchive;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 
-class BackupController extends Controller
+class BackupControllerRestore extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -221,6 +221,61 @@ class BackupController extends Controller
         )->deleteFileAfterSend(true);
     }
 
+    public function restore(Request $request)
+    {
+        // 1. Validasi request
+        $request->validate([
+            'backup_file' => 'required|file|mimes:zip',
+        ]);
+
+        $backupFile = $request->file('backup_file');
+        $restoreDir = storage_path('app/public/restore_temp');
+
+        try {
+            // Konfigurasi environment
+            set_time_limit(600); // 10 menit
+            ini_set('memory_limit', '512M');
+
+            Log::info('========== STARTING RESTORE PROCESS ==========');
+
+            // 2. Buat direktori sementara untuk proses restore
+            $this->ensureDirectoryExists($restoreDir);
+
+            // 3. Ekstrak file backup utama
+            $this->extractMainBackup($backupFile->getRealPath(), $restoreDir);
+
+            $sqlFile = $restoreDir . '/database.sql';
+            $publicZipFile = $restoreDir . '/public.zip';
+
+            if (!file_exists($sqlFile) || !file_exists($publicZipFile)) {
+                throw new Exception('File backup tidak valid. File database.sql atau public.zip tidak ditemukan.');
+            }
+
+            // 4. Restore Database
+            $this->restoreMysqlDatabase($sqlFile);
+
+            // 5. Restore Folder Public
+            $this->restorePublicFolder($publicZipFile);
+
+            Log::info('========== RESTORE PROCESS COMPLETED ==========');
+
+            // Hapus direktori sementara setelah selesai
+            File::deleteDirectory($restoreDir);
+
+            return redirect()->back()->with('success', 'Restore berhasil diselesaikan.');
+        } catch (Exception $e) {
+            Log::error('========== RESTORE PROCESS FAILED ==========');
+            Log::error('Error: ' . $e->getMessage());
+            Log::error('Trace: ' . $e->getTraceAsString());
+
+            // Hapus direktori sementara jika terjadi error
+            if (File::exists($restoreDir)) {
+                File::deleteDirectory($restoreDir);
+            }
+
+            return redirect()->back()->with('error', 'Restore gagal: ' . $e->getMessage());
+        }
+    }
 
     /**
      * Show the form for creating a new resource.
