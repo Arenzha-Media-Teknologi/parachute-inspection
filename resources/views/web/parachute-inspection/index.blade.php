@@ -128,11 +128,14 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                         <div class="d-flex align-items-center gap-2">
                             <input type="date" class="form-control" v-model="date_start" style="width: 160px;" />
                             <input type="date" class="form-control" v-model="date_end" style="width: 160px;" />
-                            <select v-model="parachuteType" class="form-select" style="width: 180px;">
+
+                            <select id="type-parachute" v-model="parachuteType" class="form-select" style="width: 180px;">
                                 <option value="">-- Tipe Parasut --</option>
-                                <option v-for="item in parachute" :value="item.type">@{{ item.type }}</option>
+                                <option v-for="type in uniqueParachuteTypes" :key="type" :value="type">@{{ type }}</option>
                             </select>
-                            <select v-model="parachuteStatus" class="form-select" style="width: 180px;">
+
+
+                            <select id="status-parachute" v-model="parachuteStatus" class="form-select" style="width: 180px;">
                                 <option value="">-- Status Perbaikan --</option>
                                 <option value="1">Serviceable</option>
                                 <option value="0">Unserviceable</option>
@@ -557,6 +560,13 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
 
 @section('pagescript')
 
+<script type="text/x-template" id="select2-template">
+    <select>
+        <slot></slot>
+    </select>
+</script>
+
+
 <script>
     $(function() {
         toastr.options = {
@@ -585,6 +595,39 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
 </script>
 
 <script>
+    Vue.component("select2", {
+        props: ["options", "value"],
+        template: "#select2-template",
+        mounted: function() {
+            var vm = this;
+            $(this.$el)
+                .select2({
+                    data: this.options
+                })
+                .val(this.value)
+                .trigger("change")
+                .on("change", function() {
+                    vm.$emit('selected', this.value);
+                    vm.$emit("input", this.value);
+                });
+        },
+        watch: {
+            options: function(options) {
+                $(this.$el)
+                    .empty()
+                    .select2({
+                        data: options
+                    });
+            }
+        },
+        destroyed: function() {
+            $(this.$el)
+                .off()
+                .select2("destroy");
+        }
+    });
+
+
     const parachuteInspection = <?php echo Illuminate\Support\Js::from($parachute_inspection) ?>;
     const parachute = <?php echo Illuminate\Support\Js::from($parachute) ?>;
     let app = new Vue({
@@ -615,6 +658,11 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
             loading: false,
         },
         computed: {
+            uniqueParachuteTypes() {
+                const types = this.parachute.map(item => item.type);
+                return [...new Set(types)];
+            },
+
             totalServiceable() {
                 return this.parachuteInspection.filter(pi => {
                     return (pi.items || []).some(item =>
@@ -1319,6 +1367,30 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
         const d = new Date(dateStr);
         return d.toISOString().slice(0, 19).replace('T', ' ');
     }
+</script>
+
+<script>
+    $(function() {
+        $("#type-parachute").select2({
+            // templateResult: formatState,
+            // templateSelection: formatState
+        }).on('select2:select', function(e) {
+            //   console.log('data', e.params.data);
+            var data = e.params.data;
+            console.log(data);
+            app.$data.parachuteType = data.id
+        });
+
+        $("#status-parachute").select2({
+            // templateResult: formatState,
+            // templateSelection: formatState
+        }).on('select2:select', function(e) {
+            //   console.log('data', e.params.data);
+            var data = e.params.data;
+            console.log(data);
+            app.$data.parachuteStatus = data.id
+        });
+    })
 </script>
 
 @endsection
