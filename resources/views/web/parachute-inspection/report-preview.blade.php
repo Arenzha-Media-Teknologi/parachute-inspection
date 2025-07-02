@@ -269,14 +269,14 @@
 </body>
 
 <script>
-    document.getElementById('printPreviewBtn').addEventListener('click', function() {
-        var printContents = document.getElementById('printArea').innerHTML;
-        var originalContents = document.body.innerHTML;
+    // document.getElementById('printPreviewBtn').addEventListener('click', function() {
+    //     var printContents = document.getElementById('printArea').innerHTML;
+    //     var originalContents = document.body.innerHTML;
 
-        document.body.innerHTML = printContents;
-        window.print();
-        document.body.innerHTML = originalContents;
-    });
+    //     document.body.innerHTML = printContents;
+    //     window.print();
+    //     document.body.innerHTML = originalContents;
+    // });
 
 
     document.getElementById('generatePdfBtn').addEventListener('click', function() {
