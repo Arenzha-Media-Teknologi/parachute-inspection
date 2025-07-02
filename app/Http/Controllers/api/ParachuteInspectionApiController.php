@@ -188,6 +188,7 @@ class ParachuteInspectionApiController extends Controller
                 }
 
                 $data = [
+                    'date' => $item['date'] ?? null,
                     'parachute_inspection_id' => $parachuteInspectionId,
                     'description' => $item['description'] ?? null,
                     'image_url' => $filePath,
@@ -306,6 +307,7 @@ class ParachuteInspectionApiController extends Controller
                 }
 
                 $data = [
+                    'date' => $item['date'] ?? null,
                     'parachute_inspection_id' => $parachuteInspectionId,
                     'description' => $item['description'] ?? null,
                     'image_url' => $filePath,
