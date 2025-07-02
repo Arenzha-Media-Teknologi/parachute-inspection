@@ -282,7 +282,8 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                 this.parachuteDetail.items.forEach(item => {
                     const detailItem = {
                         id: item.id || null,
-                        created: item.created_at || "",
+                        // created: item.created_at || "",
+                        created: item.date || "",
                         description: item.description || "",
                         file: item.image_url || "",
                         previewUrl: null,
