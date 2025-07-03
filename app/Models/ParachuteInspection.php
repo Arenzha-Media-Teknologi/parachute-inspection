@@ -16,8 +16,10 @@ class ParachuteInspection extends Model
         'date',
         'activity_name',
         'person_in_charge',
+        'repaired_by',
         'parachute_id',
         'created_by',
+        'updated_by',
     ];
 
     public function items()

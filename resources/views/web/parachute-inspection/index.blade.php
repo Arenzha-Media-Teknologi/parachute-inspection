@@ -69,7 +69,10 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     </div>
                     <div class="col-4">
                         <div class="text-center" style="background-color: green;">
-                            <h1 class="pt-3 pb-3" style="color: yellow">Serviceable :
+                            <h1 class="pt-3 pb-3">
+                                <a href="#" style="color: yellow;" @click.prevent="openServiceableReport" @mouseover="hoverColor = true" @mouseout="hoverColor = false" :style="{ color: hoverColor ? 'white' : 'yellow' }">
+                                    Serviceable :
+                                </a>
                                 <span style="color: white; font-size: 30px; font-weight: bold;"> @{{ totalServiceable }} </span>
                             </h1>
                         </div>
@@ -77,7 +80,10 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     <div class="col-4">
                         <div class="text-center" style="background-color: red;">
                             <h1 class="pt-3 pb-3">
-                                <a href="{{ route('parachute-inspection.reportUnserviceable') }}" target="_blank" style="color: yellow;" onmouseover="this.style.color='white'" onmouseout="this.style.color='yellow'"> Unserviceable : </a>
+                                <!-- <a href="{{ route('parachute-inspection.reportUnserviceable') }}" target="_blank" style="color: yellow;" onmouseover="this.style.color='white'" onmouseout="this.style.color='yellow'"> Unserviceable : </a> -->
+                                <a href="#" style="color: yellow;" @click.prevent="openUnserviceableReport" @mouseover="hoverColor = true" @mouseout="hoverColor = false" :style="{ color: hoverColor ? 'white' : 'yellow' }">
+                                    Unserviceable :
+                                </a>
                                 <span style="color: white; font-size: 30px; font-weight: bold;"> @{{ totalUnserviceable }} </span>
                             </h1>
                         </div>
@@ -195,8 +201,12 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                                     <input type="text" class="form-control form-control" placeholder="" v-model="activity" />
                                 </div>
                                 <div class="fv-row mb-7">
-                                    <label class="required fs-6 fw-semibold mb-2">Nama Petugas</label>
+                                    <label class="required fs-6 fw-semibold mb-2">Nama Petugas (Pemeriksa)</label>
                                     <input type="text" class="form-control form-control" placeholder="" v-model="checker" />
+                                </div>
+                                <div class="fv-row mb-7">
+                                    <label class="required fs-6 fw-semibold mb-2">Nama Petugas (Teknisi)</label>
+                                    <input type="text" class="form-control form-control" placeholder="" v-model="repairman" />
                                 </div>
 
                                 <div class="fv-row mb-7">
@@ -639,6 +649,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
             date: '',
             activity: '',
             checker: '',
+            repairman: '',
 
             category: '',
             type: '',
@@ -681,6 +692,32 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
         },
 
         methods: {
+            openUnserviceableReport() {
+                let url = "{{ route('parachute-inspection.reportUnserviceable') }}";
+                const params = new URLSearchParams();
+
+                if (this.date_start) params.append('date_start', this.date_start);
+                if (this.date_end) params.append('date_end', this.date_end);
+                if (this.parachuteType) params.append('type', this.parachuteType);
+                if (this.parachuteStatus) params.append('status', this.parachuteStatus);
+
+                url += '?' + params.toString();
+                window.open(url, '_blank');
+            },
+            openServiceableReport() {
+                let url = "{{ route('parachute-inspection.reportServiceable') }}";
+                const params = new URLSearchParams();
+
+                if (this.date_start) params.append('date_start', this.date_start);
+                if (this.date_end) params.append('date_end', this.date_end);
+                if (this.parachuteType) params.append('type', this.parachuteType);
+                if (this.parachuteStatus) params.append('status', this.parachuteStatus);
+
+                url += '?' + params.toString();
+                window.open(url, '_blank');
+            },
+
+
             applyFilter() {
                 const today = new Date().toISOString().split('T')[0];
                 if (this.date_end && !this.date_start) {
@@ -853,6 +890,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 this.date = '';
                 this.activity = '';
                 this.checker = '';
+                this.repairman = '';
 
                 this.category = '';
                 this.type = '';
@@ -943,7 +981,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                         'Nama Kegiatan tidak boleh kosong.',
                         'warning'
                     )
-                } else if (this.checker == '') {
+                } else if (this.checker == '' || this.repairman == '') {
                     Swal.fire(
                         'Terjadi Kesalahan!',
                         'Nama Petugas tidak boleh kosong.',
@@ -968,6 +1006,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 formData.append('date', vm.date);
                 formData.append('activity', vm.activity);
                 formData.append('checker', vm.checker);
+                formData.append('repairman', vm.repairman);
                 formData.append('parachute_id', vm.parachuteSelect);
 
                 let idx = 0;
@@ -1188,6 +1227,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 formData.append('date', this.parachuteDetail['date']);
                 formData.append('activity', this.parachuteDetail['activity_name']);
                 formData.append('checker', this.parachuteDetail['person_in_charge']);
+                formData.append('repairman', this.parachuteDetail['repaired_by']);
                 formData.append('parachute_id', this.parachuteDetail['parachute_id']);
                 this.parachuteItems.forEach((item, index) => {
                     if (item.file) {

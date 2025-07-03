@@ -156,7 +156,8 @@ class ParachuteInspectionController extends Controller
             if ($request->status === '1') {
                 // Filter for inspections where ALL items have status = 1
                 $query->whereDoesntHave('items', function ($query) {
-                    $query->where('status', '!=', 1);
+                    // $query->where('status', '!=', 1);
+                    $query->where('status', '!=', 1)->orWhereNull('status');
                 })->whereHas('items'); // Ensure there are items
             } elseif ($request->status === '0') {
                 // Filter for inspections where NOT ALL items have status = 1 (at least one item has status != 1)
@@ -210,6 +211,8 @@ class ParachuteInspectionController extends Controller
             'date' => 'required|date',
             'activity' => 'nullable|string|max:255',
             'checker' => 'nullable|string|max:255',
+            'repairman' => 'nullable|string|max:255',
+
             'parachute_id' => 'required|exists:parachutes,id',
             'items' => 'nullable|array',
             'items.*.status_date' => 'nullable|date',
@@ -224,6 +227,8 @@ class ParachuteInspectionController extends Controller
                 'date' => $validated['date'],
                 'activity_name' => $validated['activity'],
                 'person_in_charge' => $validated['checker'],
+                'repaired_by' => $validated['repairman'],
+
                 'parachute_id' => $validated['parachute_id'],
                 'created_by' => $user_id,
             ]);
@@ -434,20 +439,23 @@ class ParachuteInspectionController extends Controller
 
     public function update(Request $request, string $id)
     {
-        // $user_id = Auth::user()->id;
+        $user_id = Auth::user()->id;
         $validated = $request->validate([
             'date'    => 'required|date',
             'activity' => 'nullable|string|max:255',
             'checker' => 'nullable|string|max:255',
+            'repairman' => 'nullable|string|max:255',
             'items'   => 'required|array',
         ]);
         DB::beginTransaction();
         try {
             $pi = ParachuteInspection::with('items.itemDescriptions')->findOrFail($id);
             $pi->update([
-                'date'           => $validated['date'],
-                'activity_name'  => $validated['activity'] ?? null,
+                'date'             => $validated['date'],
+                'activity_name'    => $validated['activity'] ?? null,
                 'person_in_charge' => $validated['checker'] ?? null,
+                'repaired_by'      => $validated['repairman'] ?? null,
+                'updated_by'       => $user_id,
             ]);
 
             $keptItemIds = [];
@@ -567,7 +575,6 @@ class ParachuteInspectionController extends Controller
             });
 
             DB::commit();
-
             return response()->json([
                 'message' => 'Data berhasil diperbaharui',
                 'data'   => $pi->load('items.itemDescriptions'),
@@ -1543,8 +1550,8 @@ class ParachuteInspectionController extends Controller
                 $cell2 = $table->addCell(6000, ['valign' => 'top']);
 
                 $descs = $subitem->itemDescriptions ?? collect();
-                $utama = $descs->filter(fn($d) => strtolower($d->type ?? '') === 'utama');
-                $cadangan = $descs->filter(fn($d) => strtolower($d->type ?? '') === 'cadangan');
+                $utama = $descs->filter(fn ($d) => strtolower($d->type ?? '') === 'utama');
+                $cadangan = $descs->filter(fn ($d) => strtolower($d->type ?? '') === 'cadangan');
 
                 if ($utama->count()) {
                     $cell2->addText('Utama:', ['bold' => true]);
@@ -1638,18 +1645,61 @@ class ParachuteInspectionController extends Controller
         $query = ParachuteInspection::with(['parachute', 'items.itemDescriptions'])->orderBy('id', 'desc');
         $query->whereHas('items', function ($q) use ($request) {
             $q->where(function ($sub) {
-                $sub->where('status', '!=', '1')
-                    ->orWhereNull('status');
+                $sub->where('status', '!=', '1')->orWhereNull('status');
             });
         });
-        $results  = $query->get();
+
+        if ($request->filled('date_start') && $request->filled('date_end')) {
+            $query->whereBetween('date', [$request->date_start, $request->date_end]);
+        } elseif ($request->filled('date_start')) {
+            $query->where('date', '=', $request->date_start);
+        }
+
+        if ($request->filled('type')) {
+            $query->whereHas('parachute', function ($q) use ($request) {
+                $q->where('type', 'like', '%' . $request->type . '%');
+            });
+        }
+
+        $results = $query->get();
         $data = [
             'title' => 'UNSERVICEABLE TAG',
             'date' => now()->format('d-m-Y'),
             'data' => $results,
         ];
+        // return $data;
 
         return view('web.parachute-inspection.report-unserviceable', $data);
+    }
+
+    public function reportServiceable(Request $request)
+    {
+        $query = ParachuteInspection::with(['parachute', 'items.itemDescriptions'])->orderBy('id', 'desc');
+        $query->whereDoesntHave('items', function ($query) {
+            $query->where('status', '!=', 1)->orWhereNull('status');
+        })->whereHas('items');
+
+        if ($request->filled('date_start') && $request->filled('date_end')) {
+            $query->whereBetween('date', [$request->date_start, $request->date_end]);
+        } elseif ($request->filled('date_start')) {
+            $query->where('date', '=', $request->date_start);
+        }
+
+        if ($request->filled('type')) {
+            $query->whereHas('parachute', function ($q) use ($request) {
+                $q->where('type', 'like', '%' . $request->type . '%');
+            });
+        }
+
+        $results = $query->get();
+        $data = [
+            'title' => 'SERVICEABLE TAG',
+            'date' => now()->format('d-m-Y'),
+            'data' => $results,
+        ];
+        // return ($data);
+
+        return view('web.parachute-inspection.report-serviceable', $data);
     }
 
     public function printTag(Request $request, string $id)
