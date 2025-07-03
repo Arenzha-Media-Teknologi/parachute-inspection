@@ -82,8 +82,12 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                                                 <input type="date" class="form-control" placeholder="" v-model="parachuteDetail.date" />
                                             </div>
                                             <div class="mb-7">
-                                                <label class="required fs-6 fw-semibold mb-2">Diperiksa Oleh</label>
+                                                <label class="required fs-6 fw-semibold mb-2">Diperiksa Oleh (Nama Petugas)</label>
                                                 <input type="text" class="form-control" placeholder="" v-model="parachuteDetail.person_in_charge" />
+                                            </div>
+                                            <div class="mb-7">
+                                                <label class="required fs-6 fw-semibold mb-2">Diperbaiki Oleh (Nama Petugas)</label>
+                                                <input type="text" class="form-control" placeholder="" v-model="parachuteDetail.repaired_by" />
                                             </div>
                                         </div>
 
@@ -260,6 +264,7 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
             date: '',
             activity: '',
             checker: '',
+            repairman: '',
 
             category: '',
             type: '',
@@ -429,7 +434,7 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                     //         'Nama Kegiatan tidak boleh kosong.',
                     //         'warning'
                     //     )
-                } else if (this.parachuteDetail['person_in_charge'] == '') {
+                } else if (this.parachuteDetail['person_in_charge'] == '' || this.parachuteDetail['repaired_by'] == '') {
                     Swal.fire(
                         'Terjadi Kesalahan!',
                         'Nama Petugas tidak boleh kosong.',
@@ -449,6 +454,8 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                 formData.append('date', this.parachuteDetail['date']);
                 formData.append('activity', this.parachuteDetail['activity_name']);
                 formData.append('checker', this.parachuteDetail['person_in_charge']);
+                formData.append('repairman', this.parachuteDetail['repaired_by']);
+
                 formData.append('parachute_id', this.parachuteDetail['parachute_id']);
                 let idx = 0;
                 this.detailItems.forEach(detail => {

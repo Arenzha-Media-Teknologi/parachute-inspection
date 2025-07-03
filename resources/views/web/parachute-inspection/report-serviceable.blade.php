@@ -124,7 +124,7 @@
                 </tr>
 
                 <tr>
-                    <td colspan="6" style="text-align: left;">
+                    <!-- <td colspan="6" style="text-align: left;">
                         <span style="font-size: smaller;"><u><b>Discrepancy</b></u></span><br>
                         <span style="font-size: smaller;"><b>Catatan Kerusakan:</b></span><br>
                         @php
@@ -144,17 +144,31 @@
                             @endif
                         </ul>
                         @else @for ($i = 0; $i < 8; $i++) <br> @endfor @endif
+                    </td> -->
+                    <td colspan="6" style="text-align: left;">
+                        <!-- <span style="width: 30%;"> <b>Diperbaiki Oleh</b> </span> <span> <b>:</b> </span><br> -->
+                        <!-- <span style="width: 30%;"> <b>Diperiksa Oleh</b> </span> <span> <b>:</b> </span> -->
+
+                        <div style="display: grid; grid-template-columns: 80px 15px auto; align-items: center; margin-bottom: 5px;">
+                            <span><b>Diperbaiki Oleh</b></span> <span><b>:</b></span>
+                            <span>{{ $item->repaired_by }}</span>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 80px 15px auto; align-items: center;">
+                            <span><b>Diperiksa Oleh</b></span> <span><b>:</b></span>
+                            <span>{{ $item->person_in_charge }}</span>
+                        </div>
                     </td>
                 </tr>
 
-                <tr>
+                <!-- <tr>
                     <td colspan="3" style="text-align: center;">
                         <span style="font-size: smaller;"><b>FOR MAINTENANCE INSTRUCTION <br> PLEASE TURN OVER</b></span>
                     </td>
                     <td colspan="3" style="text-align: left;">
                         <span style="font-size: smaller;"><u><b>Doc.No.</b></u></span>
                     </td>
-                </tr>
+                </tr> -->
             </table>
         </div>
         @endforeach
