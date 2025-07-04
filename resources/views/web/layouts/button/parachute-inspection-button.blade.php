@@ -21,7 +21,11 @@ return $item->status !== '1' || is_null($item->status);
     @endif
 
     @if($isUnserviceable)
-    <a href="/parachute-inspection/print-tag/{{ $model->id }}" target="_blank" class="btn btn-sm btn-success hover-scale" style="background-color: #673AB7" data-id="{{ $model->id }}">
+    <a href="/parachute-inspection/unserviceable-tag/{{ $model->id }}" target="_blank" class="btn btn-sm btn-success hover-scale" style="background-color: #673AB7" data-id="{{ $model->id }}">
+        <i class="fas fa-print fs-4 me-2"></i> Cetak
+    </a>
+    @else
+    <a href="/parachute-inspection/serviceable-tag/{{ $model->id }}" target="_blank" class="btn btn-sm btn-success hover-scale" style="background-color: #673AB7" data-id="{{ $model->id }}">
         <i class="fas fa-print fs-4 me-2"></i> Cetak
     </a>
     @endif

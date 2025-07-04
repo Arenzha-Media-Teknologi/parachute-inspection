@@ -466,9 +466,8 @@ class ParachuteInspectionController extends Controller
                         $model = $pi->items()->find($item['id']);
                         if ($model) {
                             $update = [];
-                            if ($model->description !== ($item['description'] ?? '')) {
-                                $update['description'] = $item['description'];
-                            }
+                            $update['date'] = Carbon::parse($item['created'])->format('Y-m-d H:i:s');
+                            $update['description'] = $item['description'] ?? '';
                             if (isset($item['status'])) {
                                 $update['status'] = ($item['status'] === true || $item['status'] === '1' || $item['status'] === 1 || $item['status'] === 'true') ? '1' : '0';
                                 if (!empty($item['status_date'])) {
@@ -491,7 +490,6 @@ class ParachuteInspectionController extends Controller
                                 $update['image_file_name'] = $f->getClientOriginalName();
                                 $update['image_file_size'] = $f->getSize();
                             }
-                            $update['date'] = Carbon::parse($item['created'])->format('Y-m-d H:i:s');
                             $update['created_at'] = Carbon::parse($item['created'])->format('Y-m-d H:i:s');
                             // $update['created_at'] = Carbon::createFromFormat('Y-m-d\TH:i', $item['created'])->format('Y-m-d H:i:s');
 
@@ -532,16 +530,14 @@ class ParachuteInspectionController extends Controller
                     if (!$parent) {
                         continue;
                     }
-                    if (!empty($item['id']) && !empty($item['description'])) {
+                    if (!empty($item['id'])) {
                         $desc = $parent->itemDescriptions()->find($item['id']);
                         if ($desc) {
                             $ud = [];
                             if ($desc->type !== $item['type']) {
                                 $ud['type'] = $item['type'];
                             }
-                            if ($desc->description !== ($item['description'] ?? '')) {
-                                $ud['description'] = $item['description'];
-                            }
+                            $ud['description'] = $item['description'] ?? '';
                             if ($ud) {
                                 $desc->update($ud);
                             }
@@ -1702,7 +1698,26 @@ class ParachuteInspectionController extends Controller
         return view('web.parachute-inspection.report-serviceable', $data);
     }
 
-    public function printTag(Request $request, string $id)
+
+    public function serviceableTag(Request $request, string $id)
+    {
+        $query = ParachuteInspection::with(['parachute', 'items.itemDescriptions'])->orderBy('id', 'desc');
+        $query->where('id', $id)
+            ->whereDoesntHave('items', function ($query) {
+                $query->where('status', '!=', 1)->orWhereNull('status');
+            })->whereHas('items');
+        $result = $query->firstOrFail();
+        $data = [
+            'title' => 'SERVICEABLE TAG',
+            'date' => now()->format('d-m-Y'),
+            'data' => $result,
+        ];
+        // return $data;
+
+        return view('web.parachute-inspection.report-serviceable-tag', $data);
+    }
+
+    public function unserviceableTag(Request $request, string $id)
     {
         $query = ParachuteInspection::with(['parachute', 'items.itemDescriptions'])
             ->where('id', $id)
