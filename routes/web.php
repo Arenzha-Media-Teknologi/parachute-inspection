@@ -64,7 +64,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/report/unserviceable', 'reportUnserviceable')->name('parachute-inspection.reportUnserviceable');
         Route::get('/report/serviceable', 'reportServiceable')->name('parachute-inspection.reportServiceable');
 
-        Route::get('/print-tag/{id}', 'printTag')->name('parachute-inspection.printTag');
+        Route::get('/serviceable-tag/{id}', 'serviceableTag')->name('parachute-inspection.serviceableTag');
+        Route::get('/unserviceable-tag/{id}', 'unserviceableTag')->name('parachute-inspection.unserviceableTag');
+
         Route::get('/resources/number', 'getParachuteInspectionNumber')->name('parachute-inspection.resource.number');
     });
 

@@ -340,7 +340,16 @@
                 }
             })
             .catch(() => {
-                alert('Terjadi kesalahan saat membuat PDF.');
+                console.log('Creating PDF Error');
+                var printContents = document.getElementById('printArea').innerHTML;
+                var originalContents = document.body.innerHTML;
+                window.onafterprint = function() {
+                    location.reload();
+                };
+                document.body.innerHTML = printContents;
+                window.print();
+                document.body.innerHTML = originalContents;
+                // alert('Terjadi kesalahan saat membuat PDF.');
             })
             .finally(() => {
                 btn.disabled = false;
