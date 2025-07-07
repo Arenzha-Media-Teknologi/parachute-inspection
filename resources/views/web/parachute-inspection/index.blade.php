@@ -70,7 +70,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                     <div class="col-4">
                         <div class="text-center" style="background-color: green;">
                             <h1 class="pt-3 pb-3">
-                                <a href="#" style="color: yellow;" @click.prevent="openServiceableReport" style="color: yellow;" onmouseover="this.style.color='white'" onmouseout="this.style.color='yellow'">
+                                <a href="#" @click.prevent="openServiceableReport" style="color: yellow;" onmouseover="this.style.color='white'" onmouseout="this.style.color='yellow'">
                                     Serviceable :
                                 </a>
                                 <span style="color: white; font-size: 30px; font-weight: bold;"> @{{ totalServiceable }} </span>
@@ -81,7 +81,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                         <div class="text-center" style="background-color: red;">
                             <h1 class="pt-3 pb-3">
                                 <!-- <a href="{{ route('parachute-inspection.reportUnserviceable') }}" target="_blank" style="color: yellow;" onmouseover="this.style.color='white'" onmouseout="this.style.color='yellow'"> Unserviceable : </a> -->
-                                <a href="#" style="color: yellow;" @click.prevent="openUnserviceableReport" style="color: yellow;" onmouseover="this.style.color='white'" onmouseout="this.style.color='yellow'">
+                                <a href="#" @click.prevent="openUnserviceableReport" style="color: yellow;" onmouseover="this.style.color='white'" onmouseout="this.style.color='yellow'">
                                     Unserviceable :
                                 </a>
                                 <span style="color: white; font-size: 30px; font-weight: bold;"> @{{ totalUnserviceable }} </span>
@@ -101,7 +101,8 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
 
                         <div class="d-flex align-items-center gap-2">
                             @if(in_array("add_parachute_check", $permission))
-                            <button class="btn btn-primary" @click="onModalOpen" data-bs-toggle="modal" data-bs-target="#kt_modal_create"> Tambah Periksa </button>
+                            <!-- <button class="btn btn-primary" @click="onModalOpen" data-bs-toggle="modal" data-bs-target="#kt_modal_create"> Tambah Periksa </button> -->
+                            <button class="btn btn-primary" @click="onModalOpen">Tambah Periksa</button>
                             @endif
 
                             @if(in_array("view_report_parachute_check", $permission))
@@ -179,6 +180,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
             </div>
         </div>
 
+
         <div class="modal fade" tabindex="-1" id="kt_modal_create">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content">
@@ -211,11 +213,9 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
 
                                 <div class="fv-row mb-7">
                                     <label class="required fs-6 fw-semibold mb-2">Data Parasut</label>
-                                    <select v-model="parachuteSelect" class="form-select" @change="onParachuteChange">
-                                        <option disabled value="">-- Pilih Data Parasut --</option>
-                                        <option v-for="item in parachute" :value="item.id">@{{ item.id }} - @{{ item.serial_number }}</option>
-                                    </select>
+                                    <selectparachute2 :options="parachuteOptions" v-model="parachuteSelect" @change="onParachuteChange"></selectparachute2>
                                 </div>
+
                                 <!-- Tampilkan detail setelah data parasut dipilih -->
                                 <div v-if="parachuteSelect">
                                     <div class="fv-row mb-7">
@@ -566,15 +566,13 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
 @endsection
 @section('script')
 <!-- <script src="{{ asset('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script> -->
+
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 @endsection
 
 @section('pagescript')
 
-<script type="text/x-template" id="select2-template">
-    <select>
-        <slot></slot>
-    </select>
-</script>
 
 
 <script>
@@ -605,39 +603,6 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
 </script>
 
 <script>
-    Vue.component("select2", {
-        props: ["options", "value"],
-        template: "#select2-template",
-        mounted: function() {
-            var vm = this;
-            $(this.$el)
-                .select2({
-                    data: this.options
-                })
-                .val(this.value)
-                .trigger("change")
-                .on("change", function() {
-                    vm.$emit('selected', this.value);
-                    vm.$emit("input", this.value);
-                });
-        },
-        watch: {
-            options: function(options) {
-                $(this.$el)
-                    .empty()
-                    .select2({
-                        data: options
-                    });
-            }
-        },
-        destroyed: function() {
-            $(this.$el)
-                .off()
-                .select2("destroy");
-        }
-    });
-
-
     const parachuteInspection = <?php echo Illuminate\Support\Js::from($parachute_inspection) ?>;
     const parachute = <?php echo Illuminate\Support\Js::from($parachute) ?>;
     let app = new Vue({
@@ -667,7 +632,10 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
             parachuteStatus: '',
             reportDate: '',
             loading: false,
+
+            parachuteOptions: [],
         },
+
         computed: {
             uniqueParachuteTypes() {
                 const types = this.parachute.map(item => item.type);
@@ -692,6 +660,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
         },
 
         methods: {
+
             openUnserviceableReport() {
                 let url = "{{ route('parachute-inspection.reportUnserviceable') }}";
                 const params = new URLSearchParams();
@@ -897,10 +866,16 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 this.partNumber = '';
                 this.serialNumber = '';
                 this.parachuteItems = [];
+
+                this.parachuteOptions = this.parachute;
+                this.parachuteSelect = null;
+                $('#kt_modal_create').modal('show');
             },
 
             onParachuteChange() {
-                const selected = this.parachute.find(item => item.id === this.parachuteSelect);
+                console.log('parachuteSelect', this.parachuteSelect);
+                const selected = this.parachuteOptions.find(item => String(item.id) === String(this.parachuteSelect));
+                console.log('selected', selected);
                 if (selected) {
                     this.category = selected.category;
                     this.type = selected.type;
@@ -1053,6 +1028,8 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 for (let pair of formData.entries()) {
                     console.log(pair[0] + ': ' + pair[1]);
                 }
+                // vm.loading = false;
+                // return 'cek';
                 // Submit
                 axios.post('/parachute-inspection', formData, {
                         headers: {
@@ -1074,7 +1051,6 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                         toastr.error(message);
                     });
             },
-
 
             onSelcected: function(id) {
                 this.parachuteDetail = this.parachuteInspection.filter((item) => {
@@ -1112,7 +1088,6 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
             removeSecondItem(idx, si) {
                 this.detailItems[idx].secondItems.splice(si, 1);
             },
-
 
             formatDateForInput(dateString) {
                 if (!dateString) return '';
@@ -1238,7 +1213,9 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                 });
                 console.log('sendDataDetail:', id);
                 console.log('formData_detail:', formData);
+                // vm.loading = false;
                 // return;
+                // simpan update
                 axios.post('/parachute-inspection/' + id, formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
@@ -1253,7 +1230,7 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
                         const data = response?.data?.data;
                         toastr.success(message);
                         setTimeout(function() {
-                            // window.location.href = '/parachute-inspection';
+                            window.location.href = '/parachute-inspection';
                         }, 1000);
                     })
                     .catch(function(error) {
@@ -1268,6 +1245,74 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
             },
 
         },
+
+        components: {
+            selectparachute2: {
+                props: ['options', 'value'],
+                template: `<select class="form-select"></select>`,
+                mounted() {
+                    this.initSelect2();
+                },
+                watch: {
+                    options() {
+                        this.reinitSelect2();
+                    },
+                    value() {
+                        this.syncValue();
+                    }
+                },
+                methods: {
+                    initSelect2() {
+                        const vm = this;
+
+                        $(this.$el).select2({
+                            data: vm.convertOptions(),
+                            dropdownParent: $('#kt_modal_create'),
+                            placeholder: '-- Pilih Data Parasut --',
+                            allowClear: true,
+                            width: '100%'
+                        }).on('change', function() {
+                            const val = $(this).val();
+                            vm.$emit('input', val === '' ? null : val);
+                            vm.$emit('change');
+                        });
+
+                        this.syncValue();
+                    },
+                    reinitSelect2() {
+                        $(this.$el).off().select2('destroy');
+                        this.initSelect2();
+                    },
+                    syncValue() {
+                        this.$nextTick(() => {
+                            const val = this.value === null ? '' : String(this.value);
+                            $(this.$el).val(val).trigger('change.select2');
+                        });
+                    },
+                    convertOptions() {
+                        const data = [{
+                            id: '',
+                            text: '-- Pilih Data Parasut --'
+                        }];
+                        if (Array.isArray(this.options)) {
+                            this.options.forEach(opt => {
+                                data.push({
+                                    id: String(opt.id),
+                                    text: `${opt.id} - ${opt.serial_number}`
+                                });
+                            });
+                        }
+                        return data;
+                    }
+                },
+                destroyed() {
+                    $(this.$el).off().select2('destroy');
+                }
+            }
+        }
+
+
+
     })
 </script>
 
@@ -1436,7 +1481,8 @@ $permission = json_decode(Auth::user()->user_groups->permissions);
     function formatDate(dateStr) {
         if (!dateStr) return '';
         const d = new Date(dateStr);
-        return d.toISOString().slice(0, 19).replace('T', ' ');
+        const pad = (n) => n.toString().padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     }
 </script>
 
