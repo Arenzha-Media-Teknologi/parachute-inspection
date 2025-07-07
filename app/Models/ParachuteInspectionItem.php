@@ -31,7 +31,7 @@ class ParachuteInspectionItem extends Model
     {
         return $this->hasMany(ParachuteInspectionItemDescription::class);
     }
-      
+
     public function itemDescriptions()
     {
         return $this->hasMany(ParachuteInspectionItemDescription::class, 'parachute_inspection_item_id');
