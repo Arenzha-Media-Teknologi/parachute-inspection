@@ -436,7 +436,7 @@ class ParachuteInspectionController extends Controller
     //     }
     // }
 
-    public function update(Request $request, string $id)
+    public function update_old(Request $request, string $id)
     {
         $user_id = Auth::user()->id;
         $validated = $request->validate([
@@ -459,6 +459,7 @@ class ParachuteInspectionController extends Controller
 
             $keptItemIds = [];
             $keptDescIds = [];
+            $cek = 0;
             foreach ($request->items as $idx => $item) {
                 if (empty($item['parent_item_id']) && isset($item['created'])) {
                     if (!empty($item['id'])) {
@@ -473,11 +474,6 @@ class ParachuteInspectionController extends Controller
                                 if (!empty($item['status_date'])) {
                                     $update['status_date'] = Carbon::parse($item['status_date'], 'Asia/Jakarta')->format('Y-m-d H:i:s');
                                 }
-                                // $update['status_date'] = isset($item['status_date']) && !empty($item['status_date'])
-                                //     ? Carbon::createFromFormat('Y-m-d\TH:i', $item['status_date'])->format('Y-m-d H:i:s')
-                                //     : null;
-                                //     Carbon::parse($item['status_date'])->format('Y-m-d H:i:s');
-
                             }
 
                             if ($request->hasFile("items.$idx.file")) {
@@ -491,23 +487,19 @@ class ParachuteInspectionController extends Controller
                                 $update['image_file_size'] = $f->getSize();
                             }
                             $update['created_at'] = Carbon::parse($item['created'], 'Asia/Jakarta')->format('Y-m-d H:i:s');
-                            // $update['created_at'] = Carbon::createFromFormat('Y-m-d\TH:i', $item['created'])->format('Y-m-d H:i:s');
-
                             if ($update) {
                                 $model->update($update);
+                                $model->refresh();
                             }
                         }
+                        $cek = 'a1';
                     } else {
                         $data = [
                             'date'  => Carbon::parse($item['created'], 'Asia/Jakarta')->format('Y-m-d H:i:s'),
                             'description' => $item['description'] ?? null,
                             'status' => ($item['status'] === true || $item['status'] === '1' || $item['status'] === 1 || $item['status'] === 'true') ? '1' : '0',
                             'created_at'  => Carbon::parse($item['created'], 'Asia/Jakarta')->format('Y-m-d H:i:s'),
-
-                            // 'created_at'  => Carbon::createFromFormat('Y-m-d\TH:i', $item['created'])->format('Y-m-d H:i:s'),
-                            // 'status_date' => Carbon::parse($item['status_date'])->format('Y-m-d H:i:s'),
                             'status_date' => isset($item['status_date']) && !empty($item['status_date'])
-                                // ? Carbon::createFromFormat('Y-m-d\TH:i', $item['status_date'])->format('Y-m-d H:i:s') : null,
                                 ? Carbon::parse($item['status_date'], 'Asia/Jakarta')->format('Y-m-d H:i:s') : null,
                         ];
                         if ($request->hasFile("items.$idx.file")) {
@@ -518,6 +510,15 @@ class ParachuteInspectionController extends Controller
                             $data['image_file_size'] = $f->getSize();
                         }
                         $model = $pi->items()->create($data);
+                        $model->refresh();
+
+                        if (isset($item['type']) && !empty($item['description'])) {
+                            $model->itemDescriptions()->create([
+                                'type' => $item['type'],
+                                'description' => $item['description'],
+                            ]);
+                        }
+                        $cek = 'a2';
                     }
                     if (!empty($model) && $model->id) {
                         $keptItemIds[] = $model->id;
@@ -525,8 +526,8 @@ class ParachuteInspectionController extends Controller
                     continue;
                 }
 
-                if (!empty($item['parent_item_id']) && !empty($item['type'])) {
-                    $parent = $pi->items()->find($item['parent_item_id']);
+                if (!empty($item['parent_item_id']) && isset($item['type'])) {
+                    $parent = $pi->items()->with('itemDescriptions')->find($item['parent_item_id']);
                     if (!$parent) {
                         continue;
                     }
@@ -543,6 +544,7 @@ class ParachuteInspectionController extends Controller
                             }
                             $keptDescIds[] = $desc->id;
                         }
+                        $cek = 'b1';
                     } else {
                         if (!empty($item['description'])) {
                             $new = $parent->itemDescriptions()->create([
@@ -553,6 +555,7 @@ class ParachuteInspectionController extends Controller
                                 $keptDescIds[] = $new->id;
                             }
                         }
+                        $cek = 'b2';
                     }
                 }
             }
@@ -565,7 +568,6 @@ class ParachuteInspectionController extends Controller
                     $it->delete();
                 });
 
-            // ParachuteInspectionItemDescription::whereNotIn('id', $keptDescIds)->delete();
             $pi->items->each(function ($item) use ($keptDescIds) {
                 $item->itemDescriptions()->whereNotIn('id', $keptDescIds)->delete();
             });
@@ -573,13 +575,118 @@ class ParachuteInspectionController extends Controller
             DB::commit();
             return response()->json([
                 'message' => 'Data berhasil diperbaharui',
-                'data'   => $pi->load('items.itemDescriptions'),
+                'data' => ParachuteInspection::with('items.itemDescriptions')->find($pi->id),
+                'cek' => $cek,
+
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'message' => 'Terjadi kesalahan saat memperbaharui data.',
                 'error'  => $e->getMessage(),
+                'cek' => $cek,
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            // Ambil data utama
+            $inspection = ParachuteInspection::findOrFail($id);
+
+            $inspection->number = $request->code;
+            $inspection->date = $request->date;
+            $inspection->activity_name = $request->activity;
+            $inspection->person_in_charge = $request->checker;
+            $inspection->repaired_by = $request->repairman;
+            $inspection->parachute_id = $request->parachute_id;
+            $inspection->save();
+
+            // Ambil item dari request JSON
+            $items = json_decode($request->input('items'), true);
+            if (!is_array($items)) {
+                throw new \Exception("Format data item tidak valid");
+            }
+
+            // Simpan ID item lama untuk pengecekan hapus
+            $existingItemIds = $inspection->items()->pluck('id')->toArray();
+            $sentItemIds = [];
+
+            foreach ($items as $itemData) {
+                // Cek apakah item ini update atau create
+                $item = null;
+                if (!empty($itemData['id'])) {
+                    $item = ParachuteInspectionItem::find($itemData['id']);
+                }
+
+                if (!$item) {
+                    $item = new ParachuteInspectionItem();
+                    $item->parachute_inspection_id = $inspection->id;
+                }
+
+                // Simpan item utama
+                $item->description = $itemData['description'] ?? null;
+                $item->status = $itemData['status'] ?? 0;
+                $item->status_date = $itemData['status_date'] ?? null;
+                $item->date = $itemData['created'] ?? null;
+
+                $update = [];
+                // Tangani file
+                if (!empty($itemData['file_key']) && $request->hasFile($itemData['file_key'])) {
+                    // Upload file baru ke AWS (asumsi disk S3 dikonfigurasi di config/filesystems.php)
+                    $file = $request->file($itemData['file_key']);
+                    $path = $file->store('parachute-files', 's3'); // ganti 's3' dengan nama disk AWS kamu jika berbeda
+
+                    $update['image_url']        = Storage::disk('s3')->url($path); // full URL untuk akses
+                    $update['image_file_name']  = $file->getClientOriginalName();
+                    $update['image_file_size']  = $file->getSize();
+                } else {
+                    // Tidak ada file baru diupload, ambil dari data lama jika ada
+                    if (!empty($itemData['id'])) {
+                        $oldItem = ParachuteInspectionItem::find($itemData['id']);
+                        if ($oldItem) {
+                            $update['image_url']        = $oldItem->image_url;
+                            $update['image_file_name']  = $oldItem->image_file_name;
+                            $update['image_file_size']  = $oldItem->image_file_size;
+                        }
+                    }
+                }
+                // Simpan ke model
+                $item->update($update);
+
+                $item->save();
+                $sentItemIds[] = $item->id;
+
+                // Simpan descriptions (hapus dulu, lalu insert ulang)
+                $item->itemDescriptions()->delete();
+
+                foreach ($itemData['item_descriptions'] ?? [] as $descData) {
+                    $desc = new ParachuteInspectionItemDescription();
+                    $desc->parachute_inspection_item_id = $item->id;
+                    $desc->type = $descData['type'] ?? null;
+                    $desc->description = $descData['description'] ?? null;
+                    $desc->save();
+                }
+            }
+
+            // Hapus item lama yang tidak dikirim lagi
+            $itemsToDelete = array_diff($existingItemIds, $sentItemIds);
+            if (!empty($itemsToDelete)) {
+                ParachuteInspectionItem::whereIn('id', $itemsToDelete)->delete();
+            }
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Data berhasil diperbarui',
+                'data' => $inspection->load('items.itemDescriptions')
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat memperbaharui data.',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
