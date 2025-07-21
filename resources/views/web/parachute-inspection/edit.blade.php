@@ -445,57 +445,145 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                     this.loading = true;
                 }
             },
+
+            // sendDataDetail: function(id) {
+            //     let vm = this;
+            //     vm.loading = true;
+            //     console.log('sendDataDetail:', id);
+            //     let formData = new FormData();
+            //     formData.append('code', this.parachuteDetail['number']);
+            //     formData.append('date', this.parachuteDetail['date']);
+            //     formData.append('activity', this.parachuteDetail['activity_name']);
+            //     formData.append('checker', this.parachuteDetail['person_in_charge']);
+            //     formData.append('repairman', this.parachuteDetail['repaired_by']);
+
+            //     formData.append('parachute_id', this.parachuteDetail['parachute_id']);
+            //     let idx = 0;
+            //     this.detailItems.forEach(detail => {
+            //         formData.append(`items[${idx}][id]`, detail.id || '');
+            //         if (detail.created && detail.created !== '0' && detail.created !== 'null') {
+            //             formData.append(`items[${idx}][created]`, detail.created);
+            //         }
+            //         formData.append(`items[${idx}][description]`, detail.description || '');
+            //         formData.append(`items[${idx}][status]`, detail.status ? 1 : 0);
+            //         if (detail.status_date && detail.status_date !== '0' && detail.status_date !== 'null') {
+            //             formData.append(`items[${idx}][status_date]`, detail.status_date);
+            //         }
+            //         if (detail.file instanceof File) {
+            //             formData.append(`items[${idx}][file]`, detail.file);
+            //         }
+            //         idx++;
+            //     });
+
+            //     this.detailItems.forEach(detail => {
+            //         detail.mainItems.forEach(m => {
+            //             formData.append(`items[${idx}][parent_item_id]`, detail.id);
+            //             formData.append(`items[${idx}][type]`, 'utama');
+            //             formData.append(`items[${idx}][description]`, m.description);
+            //             idx++;
+            //         });
+            //     });
+            //     this.detailItems.forEach(detail => {
+            //         detail.secondItems.forEach(s => {
+            //             formData.append(`items[${idx}][parent_item_id]`, detail.id);
+            //             formData.append(`items[${idx}][type]`, 'cadangan');
+            //             formData.append(`items[${idx}][description]`, s.description);
+            //             idx++;
+            //         });
+            //     });
+
+            //     for (let pair of formData.entries()) {
+            //         console.log(pair[0] + ': ' + pair[1]);
+            //     }
+            //     // vm.loading = false;
+            //     // return;
+
+            //     axios.post('/parachute-inspection/' + id, formData, {
+            //             headers: {
+            //                 'Content-Type': 'multipart/form-data'
+            //             }
+            //         })
+            //         .then(function(response) {
+            //             vm.loading = false;
+            //             let message = response?.data?.message;
+            //             if (!message) {
+            //                 message = 'Data berhasil disimpan'
+            //             }
+            //             const data = response?.data?.data;
+            //             toastr.success(message);
+            //             setTimeout(function() {
+            //                 // window.location.href = '/parachute-inspection';
+            //             }, 1000);
+            //         })
+            //         .catch(function(error) {
+            //             vm.loading = false;
+            //             console.log(error);
+            //             let message = error?.response?.data?.message;
+            //             if (!message) {
+            //                 message = 'Terdapat kesalahan..'
+            //             }
+            //             toastr.error(message);
+            //         });
+            // },
+
             sendDataDetail: function(id) {
                 let vm = this;
                 vm.loading = true;
                 console.log('sendDataDetail:', id);
                 let formData = new FormData();
+
+                // Informasi umum
                 formData.append('code', this.parachuteDetail['number']);
                 formData.append('date', this.parachuteDetail['date']);
                 formData.append('activity', this.parachuteDetail['activity_name']);
                 formData.append('checker', this.parachuteDetail['person_in_charge']);
                 formData.append('repairman', this.parachuteDetail['repaired_by']);
-
                 formData.append('parachute_id', this.parachuteDetail['parachute_id']);
-                let idx = 0;
-                this.detailItems.forEach(detail => {
-                    formData.append(`items[${idx}][id]`, detail.id || '');
-                    if (detail.created && detail.created !== '0' && detail.created !== 'null') {
-                        formData.append(`items[${idx}][created]`, detail.created);
-                    }
-                    formData.append(`items[${idx}][description]`, detail.description || '');
-                    formData.append(`items[${idx}][status]`, detail.status ? 1 : 0);
-                    if (detail.status_date && detail.status_date !== '0' && detail.status_date !== 'null') {
-                        formData.append(`items[${idx}][status_date]`, detail.status_date);
-                    }
+
+                // Bangun struktur items (nested)
+                const items = this.detailItems.map(detail => {
+                    const item = {
+                        id: detail.id || null,
+                        description: detail.description || '',
+                        status: detail.status ? 1 : 0,
+                        status_date: detail.status_date || null,
+                        created: detail.created || null,
+                        item_descriptions: [],
+                    };
+
+                    // Jika ada file, harus dikirim terpisah via FormData nanti
                     if (detail.file instanceof File) {
-                        formData.append(`items[${idx}][file]`, detail.file);
+                        item.file_key = `file_${detail.id || Math.random().toString(36).substring(2)}`; // generate key unik
+                        formData.append(item.file_key, detail.file);
                     }
-                    idx++;
-                });
 
-                this.detailItems.forEach(detail => {
+                    // Tambahkan deskripsi utama
                     detail.mainItems.forEach(m => {
-                        formData.append(`items[${idx}][parent_item_id]`, detail.id);
-                        formData.append(`items[${idx}][type]`, 'utama');
-                        formData.append(`items[${idx}][description]`, m.description);
-                        idx++;
+                        item.item_descriptions.push({
+                            type: 'utama',
+                            description: m.description || ''
+                        });
                     });
-                });
-                this.detailItems.forEach(detail => {
+
+                    // Tambahkan deskripsi cadangan
                     detail.secondItems.forEach(s => {
-                        formData.append(`items[${idx}][parent_item_id]`, detail.id);
-                        formData.append(`items[${idx}][type]`, 'cadangan');
-                        formData.append(`items[${idx}][description]`, s.description);
-                        idx++;
+                        item.item_descriptions.push({
+                            type: 'cadangan',
+                            description: s.description || ''
+                        });
                     });
+
+                    return item;
                 });
 
+                // Tambahkan JSON items ke FormData
+                formData.append('items', JSON.stringify(items));
+
+                // Debug log
                 for (let pair of formData.entries()) {
                     console.log(pair[0] + ': ' + pair[1]);
                 }
-                // vm.loading = false;
-                // return;
+
                 axios.post('/parachute-inspection/' + id, formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
@@ -503,11 +591,7 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                     })
                     .then(function(response) {
                         vm.loading = false;
-                        let message = response?.data?.message;
-                        if (!message) {
-                            message = 'Data berhasil disimpan'
-                        }
-                        const data = response?.data?.data;
+                        let message = response?.data?.message || 'Data berhasil disimpan';
                         toastr.success(message);
                         setTimeout(function() {
                             window.location.href = '/parachute-inspection';
@@ -516,10 +600,7 @@ $userLoginPermissions = request()->session()->get('userLoginPermissions');
                     .catch(function(error) {
                         vm.loading = false;
                         console.log(error);
-                        let message = error?.response?.data?.message;
-                        if (!message) {
-                            message = 'Terdapat kesalahan..'
-                        }
+                        let message = error?.response?.data?.message || 'Terdapat kesalahan..';
                         toastr.error(message);
                     });
             },
